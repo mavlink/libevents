@@ -1,0 +1,163 @@
+{
+    "version": 1,
+    "components": [
+        {
+            "component_id": 1,
+            "namespace": "test",
+            "event_groups": [
+                {
+                    "name": "default",
+                    "events": [
+                        {
+                            "sub_id": 2306236,
+                            "name": "test1",
+                            "message": "Test"
+                        },
+                        {
+                            "sub_id": 2307445,
+                            "name": "test2",
+                            "message": "Arguments: {1} {2} {3} {4} {5:.2}",
+                            "description": "<unknown>content\\<</unknown>test\n\\<\\{\\}<param>PARAM</param><a>www.test.com</a>",
+                            "arguments": [
+                                {
+                                    "type": "int8_t",
+                                    "name": "a"
+                                },
+                                {
+                                    "type": "int16_t",
+                                    "name": "b"
+                                },
+                                {
+                                    "type": "int32_t",
+                                    "name": "c"
+                                },
+                                {
+                                    "type": "int64_t",
+                                    "name": "d"
+                                },
+                                {
+                                    "type": "float",
+                                    "name": "e"
+                                }
+                            ]
+                        },
+                        {
+                            "sub_id": 2307042,
+                            "name": "test3",
+                            "message": "Arguments: {1} {2:.1} {3} {4} {5}",
+                            "description": "<a href=\"www.test.com/a/b/c?x=1\">url</a>\n<profile name=\"!normal\">keep this. <param>P</param></profile>\n\n <profile name=\"!dev\">remove this</profile>",
+                            "arguments": [
+                                {
+                                    "type": "uint8_t",
+                                    "name": "a"
+                                },
+                                {
+                                    "type": "float",
+                                    "name": "b"
+                                },
+                                {
+                                    "type": "uint16_t",
+                                    "name": "c"
+                                },
+                                {
+                                    "type": "uint32_t",
+                                    "name": "d"
+                                },
+                                {
+                                    "type": "uint64_t",
+                                    "name": "e"
+                                }
+                            ]
+                        },
+                        {
+                            "sub_id": 2307043,
+                            "name": "test4",
+                            "message": "Bitfield value: {1}",
+                            "arguments": [
+                                {
+                                    "type": "test2::enum_bitfield_t",
+                                    "name": "a"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "custom_group",
+                    "events": [
+                        {
+                            "sub_id": 1531103,
+                            "name": "test_enum",
+                            "message": "Event using enums. Enum values: {1}, {2}",
+                            "arguments": [
+                                {
+                                    "type": "test2::enum_t",
+                                    "name": "enum1"
+                                },
+                                {
+                                    "type": "test2::enum_t",
+                                    "name": "enum2"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "component_id": 0,
+            "namespace": "test2",
+            "enums": [
+                {
+                    "name": "enum_t",
+                    "type": "uint64_t",
+                    "description": "Enum description",
+                    "entries": [
+                        {
+                            "value": 0,
+                            "name": "zero",
+                            "description": "Zero value"
+                        },
+                        {
+                            "value": 1,
+                            "name": "one",
+                            "description": "One value"
+                        },
+                        {
+                            "value": 4611686018427387904,
+                            "name": "large",
+                            "description": "Large value"
+                        }
+                    ]
+                },
+                {
+                    "name": "enum_bitfield_t",
+                    "type": "uint8_t",
+                    "is_bitfield": true,
+                    "entries": [
+                        {
+                            "value": 1,
+                            "name": "bit1",
+                            "description": "Bit 1"
+                        },
+                        {
+                            "value": 2,
+                            "name": "bit2",
+                            "description": "Bit 2"
+                        },
+                        {
+                            "value": 4,
+                            "name": "bit3",
+                            "description": "Bit 3"
+                        },
+                        {
+                            "value": 8,
+                            "name": "bit4",
+                            "description": "Bit 4"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
