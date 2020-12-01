@@ -129,8 +129,12 @@ public:
     Parser() = default;
     ~Parser() = default;
 
-    bool loadDefinitionsFile(const std::string& definitions_file);
-    bool loadDefinitions(const std::string& definitions);
+    using translate_func = std::function<std::string(const std::string&)>;
+
+    bool loadDefinitionsFile(
+        const std::string& definitions_file, translate_func translate = [](const std::string& s) { return s; });
+    bool loadDefinitions(
+        const std::string& definitions, translate_func translate = [](const std::string& s) { return s; });
 
     std::unique_ptr<ParsedEvent> parse(const EventType& event);
 
@@ -143,7 +147,7 @@ public:
     }
 
 private:
-    bool loadDefinitions(const nlohmann::json& j);
+    bool loadDefinitions(const nlohmann::json& j, translate_func translate);
     EnumDefinition* findEnumDefinition(const std::string& event_namespace, const std::string& type);
 
     EnumDefinitions _enums;
