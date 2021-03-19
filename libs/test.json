@@ -79,6 +79,30 @@
                                     "name": "a"
                                 }
                             ]
+                        },
+                        {
+                            "sub_id": 2307044,
+                            "name": "test5",
+                            "message": "Testing units: {1m}",
+                            "description": "{1:.3m_v} {1C}\n{2:.6m^2}\n{3m}\n{4m/s}",
+                            "arguments": [
+                                {
+                                    "type": "float",
+                                    "name": "a"
+                                },
+                                {
+                                    "type": "float",
+                                    "name": "b"
+                                },
+                                {
+                                    "type": "int8_t",
+                                    "name": "c"
+                                },
+                                {
+                                    "type": "uint64_t",
+                                    "name": "d"
+                                }
+                            ]
                         }
                     ]
                 },

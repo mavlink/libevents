@@ -39,7 +39,14 @@ Supported format and parsing:
   - Parameters: `<param>PARAM_NAME</param>`
   - no nested tags of the same type
 - arguments: following python syntax, with 1-based indexing (instead of 0)
-  - general form: `{ARG_IDX[:.NUM_DECIMAL_DIGITS]}`
+  - general form: `{ARG_IDX[:.NUM_DECIMAL_DIGITS][UNIT]}`
+
+    UNIT:
+      - m: horizontal distance in meters
+      - m_v: vertical distance in meters
+      - m^2: area in m^2
+      - m/s: speed in m/s
+      - C: temperature in degrees celcius
 
 #### Log levels
 Events have 2 log levels:

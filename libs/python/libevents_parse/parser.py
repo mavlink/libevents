@@ -144,7 +144,14 @@ class ParsedEvent:
          *   - unknown tags are ignored (including content)
          *   - no nested tags of the same type
          * - arguments: following python syntax, with 1-based indexing (instead of 0)
-         *   - general form: {ARG_IDX[:.NUM_DECIMAL_DIGITS]}
+         *   and custom types (units)
+         *   - general form: {ARG_IDX[:.NUM_DECIMAL_DIGITS][UNIT]}
+         *     UNIT:
+         *     - m: horizontal distance in meters
+         *     - m_v: vertical distance in meters
+         *     - m^2: area in m^2
+         *     - m/s: speed in m/s
+         *     - C: temperature in degrees celcius
          * - returned string will be trimmed (removed whitespace)
          """
         i = 0
@@ -208,7 +215,7 @@ class ParsedEvent:
                     self._debug_print("Error: } not found")
                     continue
                 arg = msg[i+1:arg_end_idx]
-                m = re.match(r"^(\d+)(?::(?:\.(\d+))?)?$", arg)
+                m = re.match(r"^(\d+)(?::(?:\.(\d+))?)?(m|m_v|m/s|m\^2|C)?$", arg)
                 if not m:
                     i += 1
                     self._debug_print("Error: unknown argument format")
@@ -221,12 +228,23 @@ class ParsedEvent:
                 print_fmt = "{}"
                 if m.group(2) is not None:
                     print_fmt = "{:."+m.group(2)+"f}"
-                arg_value = print_fmt.format(self.argument_display_value(arg_idx))
-                msg = msg[:i] + arg_value + msg[arg_end_idx+1:]
-                i += len(arg_value)
+                arg_value = self.argument_display_value(arg_idx)
+                arg_value_str = print_fmt.format(arg_value)
+                unit = m.group(3)
+                if unit is not None:
+                    arg_value_str += ' ' + self._parse_unit(unit)
+                msg = msg[:i] + arg_value_str + msg[arg_end_idx+1:]
+                i += len(arg_value_str)
             else:
                 i += 1
         return msg.strip()
+
+    @staticmethod
+    def _parse_unit(unit: str) -> str:
+        """ Parse unit from format """
+        if unit == 'm_v':
+            return 'm'
+        return unit
 
 
 class Parser:

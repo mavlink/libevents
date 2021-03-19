@@ -12,6 +12,8 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <iomanip>
+#include <sstream>
 
 int main(int argc, char** argv)
 {
@@ -150,6 +152,67 @@ int main(int argc, char** argv)
         assert(parsed_event->description() == "");
 
         assert(a & events::test2::enums::enum_bitfield_t::bit2);
+    }
+
+    {
+        float a = 16.423f;
+        float b = 9472.3245894327f;
+        int8_t c = -54;
+        uint64_t d = 4613686018427387904;
+        events::EventType event = events::test::create_test5(events::Log::Info, a, b, c, d);
+
+        // customize unit formatters
+        p.formatters().float_value_with_unit = [](float value, int num_decimal_digits, const std::string& unit) {
+            std::ostringstream argument_stream;
+            if (unit == "m_v") {  // vertical distance
+                argument_stream << std::fixed << std::setprecision(num_decimal_digits + 3) << (value / 1000.f)
+                                << " kilometers";
+            } else if (num_decimal_digits >= 0) {
+                argument_stream << std::fixed << std::setprecision(num_decimal_digits) << value << " " << unit;
+            } else {
+                argument_stream << value << " " << unit;
+            }
+            return argument_stream.str();
+        };
+        p.formatters().int_value_with_unit = [](int64_t value, const std::string& unit) {
+            std::ostringstream argument_stream;
+            if (unit == "m") {
+                argument_stream << value << " meters";
+            } else if (unit == "m/s") {
+                argument_stream << value << " meters per second";
+            } else {
+                argument_stream << value << " " << unit;
+            }
+            return argument_stream.str();
+        };
+
+        std::unique_ptr<events::parser::ParsedEvent> parsed_event = p.parse(event);
+        assert(parsed_event);
+        assert(parsed_event->id() == event.id);
+        assert(event.id == 2307044 | (1 << 24));
+        assert(parsed_event->name() == "test5");
+        assert(parsed_event->group() == "default");
+
+        assert(parsed_event->numArguments() == 4);
+        assert(parsed_event->argument(0).type == events::parser::BaseType::float_t);
+        assert(parsed_event->argumentValue(0).value.val_float == a);
+        assert(parsed_event->argument(1).type == events::parser::BaseType::float_t);
+        assert(parsed_event->argumentValue(1).value.val_float == b);
+        assert(parsed_event->argument(2).type == events::parser::BaseType::int8_t);
+        assert(parsed_event->argumentValue(2).value.val_int8_t == c);
+        assert(parsed_event->argument(3).type == events::parser::BaseType::uint64_t);
+        assert(parsed_event->argumentValue(3).value.val_uint64_t == d);
+
+        printf("message=%s\n", parsed_event->message().c_str());
+        printf("description=%s\n", parsed_event->description().c_str());
+        assert(parsed_event->message() == "Testing units: 16.423 m");
+        assert(parsed_event->description() == R"STR(0.016423 kilometers 16.423 C
+9472.324219 m^2
+-54 meters
+4613686018427387904 meters per second)STR");
+
+        p.formatters().float_value_with_unit = nullptr;
+        p.formatters().int_value_with_unit = nullptr;
     }
 
     {

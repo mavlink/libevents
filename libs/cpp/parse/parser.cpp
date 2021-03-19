@@ -120,7 +120,7 @@ size_t ParsedEvent::findClosingTag(const string& s, size_t start_pos, const stri
     return s.find(search, start_pos);
 }
 
-string ParsedEvent::getFormattedArgument(int argument_idx, int num_decimal_digits) const
+string ParsedEvent::getFormattedArgument(int argument_idx, int num_decimal_digits, const std::string& unit) const
 {
     std::ostringstream argument_stream;
     Argument arg = argumentValue(argument_idx);
@@ -167,6 +167,36 @@ string ParsedEvent::getFormattedArgument(int argument_idx, int num_decimal_digit
             }
             break;
         case BaseType::invalid: argument_stream << "(unknown)"; break;
+    }
+
+    // add the unit if any
+    if (!unit.empty()) {
+        string normal_unit = unit;
+        if (unit == "m_v")
+            normal_unit = "m";
+
+        switch (_event_definition.arguments[argument_idx].type) {
+            case BaseType::float_t:
+                if (_config.formatters.float_value_with_unit) {
+                    string value_with_unit =
+                        _config.formatters.float_value_with_unit(arg.value.val_float, num_decimal_digits, unit);
+                    argument_stream.str("");
+                    argument_stream << value_with_unit;
+                } else {
+                    argument_stream << " " << normal_unit;
+                }
+                break;
+            case BaseType::invalid: break;
+            default:
+                if (_config.formatters.int_value_with_unit) {
+                    string value_with_unit = _config.formatters.int_value_with_unit((int64_t)value, unit);
+                    argument_stream.str("");
+                    argument_stream << value_with_unit;
+                } else {
+                    argument_stream << " " << normal_unit;
+                }
+                break;
+        }
     }
 
     if (_event_definition.arguments[argument_idx].isEnum()) {
@@ -216,7 +246,14 @@ string ParsedEvent::processMessage(const string& message) const
      *   - unknown tags are ignored (including content)
      *   - no nested tags of the same type
      * - arguments: following python syntax, with 1-based indexing (instead of 0)
-     *   - general form: {ARG_IDX[:.NUM_DECIMAL_DIGITS]}
+     *   and custom types (units)
+     *   - general form: {ARG_IDX[:.NUM_DECIMAL_DIGITS][UNIT]}
+     *     UNIT:
+     *     - m: horizontal distance in meters
+     *     - m_v: vertical distance in meters
+     *     - m^2: area in m^2
+     *     - m/s: speed in m/s
+     *     - C: temperature in degrees celcius
      * - returned string will be trimmed (removed whitespace)
      */
 
@@ -299,24 +336,37 @@ string ParsedEvent::processMessage(const string& message) const
                 continue;
             }
 
-            string format = ret.substr(i + 1, format_end_pos - i - 1);
-            int argument_idx = strtol(format.c_str(), nullptr, 0) - 1;
-            if (argument_idx < 0 || argument_idx >= (int)_event_definition.arguments.size()) {
+            const string format = ret.substr(i + 1, format_end_pos - i - 1);
+            char* argument_end = nullptr;
+            int argument_idx = strtol(format.c_str(), &argument_end, 0) - 1;
+            if (argument_end == nullptr || argument_idx < 0 ||
+                argument_idx >= (int)_event_definition.arguments.size()) {
                 continue;
             }
 
-            size_t column = format.find(':');
+            size_t index = argument_end - format.c_str();
+
+            // check for decimal digits [:.NUM_DECIMAL_DIGITS]
             int num_decimal_digits = -1;
-            if (column != string::npos) {
-                size_t point = format.find('.', column);
-                if (point != string::npos) {
-                    num_decimal_digits = strtol(format.c_str() + point + 1, nullptr, 0);
+            if (index < format.length() && format[index] == ':') {
+                ++index;
+                if (index < format.length() && format[index] == '.') {
+                    num_decimal_digits = strtol(format.c_str() + index + 1, &argument_end, 0);
+                    if (argument_end) {
+                        index = argument_end - format.c_str();
+                    }
                 }
             }
 
-            LIBEVENTS_PARSER_DEBUG_PRINTF("printf format: %s, arg idx=%i, digits=%i\n", format.c_str(), argument_idx,
-                                          num_decimal_digits);
-            string argument = getFormattedArgument(argument_idx, num_decimal_digits);
+            // check for unit
+            string unit_str;
+            if (index < format.length()) {
+                unit_str = format.substr(index);
+            }
+
+            LIBEVENTS_PARSER_DEBUG_PRINTF("printf format: %s, arg idx=%i, digits=%i, unit=%s\n", format.c_str(),
+                                          argument_idx, num_decimal_digits, unit_str.c_str());
+            string argument = getFormattedArgument(argument_idx, num_decimal_digits, unit_str);
             ret = ret.substr(0, i) + argument + ret.substr(format_end_pos + 1);
             i += argument.size() - 1;
         }

@@ -64,6 +64,9 @@ struct Formatters {
     std::function<std::string(const std::string& content)> param = [](const std::string& content) { return content; };
     std::function<std::string(const std::string& content, const std::string& link)> url =
         [](const std::string& content, const std::string& link) { return link; };
+
+    std::function<std::string(int64_t value, const std::string& unit)> int_value_with_unit;
+    std::function<std::string(float value, int num_decimal_digits, const std::string& unit)> float_value_with_unit;
 };
 
 struct Config {
@@ -111,7 +114,7 @@ private:
     std::string processMessage(const std::string& message) const;
     static size_t find(const std::string& s, const std::string& search_chars, size_t start_pos);
     static size_t findClosingTag(const std::string& s, size_t start_pos, const std::string& tag);
-    std::string getFormattedArgument(int argument_idx, int num_decimal_digits) const;
+    std::string getFormattedArgument(int argument_idx, int num_decimal_digits, const std::string& unit) const;
 
     const EventType _event;
     const Config& _config;

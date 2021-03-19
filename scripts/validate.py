@@ -74,7 +74,14 @@ def validate_event_description(description: str, num_args: int):
      *   - unknown tags are ignored (including content)
      *   - no nested tags of the same type
      * - arguments: following python syntax, with 1-based indexing (instead of 0)
-     *   - general form: {ARG_IDX[:.NUM_DECIMAL_DIGITS]}
+     *   and custom types (units)
+     *   - general form: {ARG_IDX[:.NUM_DECIMAL_DIGITS][UNIT]}
+     *     UNIT:
+     *     - m: horizontal distance in meters
+     *     - m_v: vertical distance in meters
+     *     - m^2: area in m^2
+     *     - m/s: speed in m/s
+     *     - C: temperature in degrees celcius
     """
 
     # remove escaped characters to simplify parsing
@@ -146,10 +153,11 @@ def validate_event_description(description: str, num_args: int):
                 raise Exception("Invalid argument, no '}}' found in:\n\n{:}\n\n" \
                         "Use escaping for a literal output: '\\{{'".format(description))
             arg = check_str[i+1:arg_end_idx]
-            m = re.match(r"^(\d+)(?::(?:\.(\d+))?)?$", arg)
+            m = re.match(r"^(\d+)(?::(?:\.(\d+))?)?(m|m_v|m/s|m\^2|C)?$", arg)
             if not m:
                 raise Exception("Invalid argument ('{{{:}}}') in:\n\n{:}\n\n" \
-                        "General form: {{ARG_IDX[:.NUM_DECIMAL_DIGITS]}}".format(arg, description))
+                        "General form: {{ARG_IDX[:.NUM_DECIMAL_DIGITS][UNIT]}}" \
+                        .format(arg, description))
             #print(m.groups())
             arg_idx = int(m.group(1)) - 1
             if arg_idx < 0 or arg_idx >= num_args:

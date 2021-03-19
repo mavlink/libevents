@@ -54,6 +54,7 @@ print("message={}".format(parsed_event.message()))
 print("description={}".format(parsed_event.description()))
 assert parsed_event.message() == "Test"
 assert parsed_event.description() == ""
+print("")
 
 
 a = -3
@@ -66,7 +67,7 @@ event_id = 2307445 | (1 << 24)
 parsed_event = p.parse(event_id, args)
 
 assert parsed_event
-assert parsed_event.event_id() == 2307445 | (1 << 24)
+assert parsed_event.event_id() == event_id
 assert parsed_event.name() == "test2"
 assert parsed_event.group() == "default"
 assert parsed_event.num_arguments() == 5
@@ -75,6 +76,7 @@ print("message={}".format(parsed_event.message()))
 print("description={}".format(parsed_event.description()))
 assert parsed_event.message() == "Arguments: -3 -9238 832223 -9277377287318721 3423423.25"
 assert parsed_event.description() == "test\n<{}PARAM#www.test.com<link=www.test.com>#"
+print("")
 
 
 a = 42
@@ -88,7 +90,7 @@ event_id = 2307042 | (1 << 24)
 parsed_event = p.parse(event_id, args)
 
 assert parsed_event
-assert parsed_event.event_id() == 2307042 | (1 << 24)
+assert parsed_event.event_id() == event_id
 assert parsed_event.name() == "test3"
 assert parsed_event.group() == "default"
 
@@ -98,6 +100,7 @@ print("message={}".format(parsed_event.message()))
 print("description={}".format(parsed_event.description()))
 assert parsed_event.message() == "Arguments: 42 321.3 9182 663281 2834873473267162"
 assert parsed_event.description() == "#url<link=www.test.com/a/b/c?x=1>#\nkeep this. P"
+print("")
 
 
 a = (1 << 1) | (1 << 2)
@@ -106,7 +109,7 @@ event_id = 2307043 | (1 << 24)
 parsed_event = p.parse(event_id, args)
 
 assert parsed_event
-assert parsed_event.event_id() == 2307043 | (1 << 24)
+assert parsed_event.event_id() == event_id
 assert parsed_event.name() == "test4"
 
 assert parsed_event.num_arguments() == 1
@@ -115,6 +118,31 @@ print("message={}".format(parsed_event.message()))
 print("description={}".format(parsed_event.description()))
 assert parsed_event.message() == "Bitfield value: Bit 2|Bit 3"
 assert parsed_event.description() == ""
+print("")
+
+
+a = 16.423
+b = 9472.3245894327
+c = -54
+d = 4613686018427387904
+args = create_args([(a, 'float'), (b, 'float'), (c, 'int8_t'), (d, 'uint64_t')])
+event_id = 2307044 | (1 << 24)
+parsed_event = p.parse(event_id, args)
+
+assert parsed_event
+assert parsed_event.event_id() == event_id
+assert parsed_event.name() == "test5"
+
+assert parsed_event.num_arguments() == 4
+
+print("message={}".format(parsed_event.message()))
+print("description={}".format(parsed_event.description()))
+assert parsed_event.message() == "Testing units: 16.42300033569336 m"
+assert parsed_event.description() == """16.423 m 16.42300033569336 C
+9472.324219 m^2
+-54 m
+4613686018427387904 m/s"""
+print("")
 
 
 a = 1
@@ -124,7 +152,7 @@ event_id = 1531103 | (1 << 24)
 parsed_event = p.parse(event_id, args)
 
 assert parsed_event
-assert parsed_event.event_id() == 1531103 | (1 << 24)
+assert parsed_event.event_id() == event_id
 assert parsed_event.name() == "test_enum"
 assert parsed_event.group() == "custom_group"
 
@@ -134,5 +162,6 @@ print("message={}".format(parsed_event.message()))
 print("description={}".format(parsed_event.description()))
 assert parsed_event.message() == "Event using enums. Enum values: One value, Large value"
 assert parsed_event.description() == ""
+print("")
 
 
