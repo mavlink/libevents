@@ -250,7 +250,7 @@ class Parser:
         # TODO: merge with self._events in case we already have definitions
 
         version = json_data.get('version', 0)
-        if version != 1:
+        if version < 1:
             raise ParserException("Unexpected version {}".format(version))
         self._events = json_data
         # store enums separately for faster access

@@ -369,9 +369,12 @@ bool Parser::loadDefinitions(const string& definitions, translate_func translate
 bool Parser::loadDefinitions(const json& j, translate_func translate)
 {
     // version check
-    if (!j.contains("version") || j["version"].get<int>() != 1) {
+    if (!j.contains("version") || j["version"].get<int>() < 1) {
         return false;
     }
+
+    LIBEVENTS_PARSER_DEBUG_PRINTF("File version: %i\n", j["version"].get<int>());
+
     if (!j.contains("components")) {
         return true;
     }

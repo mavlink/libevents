@@ -6,7 +6,7 @@
 
 	"properties": {
 		"version": {
-			"description":  "Version number for the format of this file.",
+			"description":  "Version number for the format of this file. Future versions need to be backwards compatible (i.e. existing parsers can parse newer versions).",
 			"type":         "integer",
 			"minimum":      1,
 			"maximum":      1
