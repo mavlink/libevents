@@ -160,6 +160,14 @@
 							"required":             [ "name" ],
 							"additionalProperties": false
 						}
+					},
+					"supported_protocols": {
+						"type": "array",
+						"items": {
+							"type": "string",
+							"pattern": "^(calibration|health_and_arming_check)$",
+							"comment": "Optional list of supported protocols."
+						}
 					}
 				},
 				"required":             [ "component_id", "namespace" ],

@@ -81,6 +81,11 @@ def main():
                                 matching_group["events"].append(event)
                         else:
                             matching_comp["event_groups"].append(group)
+
+                    if "supported_protocols" in component:
+                        matching_comp["supported_protocols"] = \
+                            list(set(matching_comp.get("supported_protocols", []) +
+                            component["supported_protocols"]))
                 else:
                     events["components"].append(component)
 

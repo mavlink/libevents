@@ -567,6 +567,17 @@ bool Parser::loadDefinitions(const json& j, translate_func translate)
                     }
                 }
             }
+
+            if (component.contains("supported_protocols")) {
+                if (_supported_protocols.find(component_id) == _supported_protocols.end()) {
+                    _supported_protocols[component_id] = {};
+                }
+                set<string>& supported_components = _supported_protocols[component_id];
+                for (const auto& proto_iter : component["supported_protocols"].items()) {
+                    const auto& proto = proto_iter.value().get<string>();
+                    supported_components.insert(proto);
+                }
+            }
         }
 
     } catch (const json::exception& e) {
@@ -606,6 +617,14 @@ unique_ptr<ParsedEvent> Parser::parse(const EventType& event)
         return nullptr;
     }
     return unique_ptr<ParsedEvent>(new ParsedEvent(event, _config, *iter->second.get(), _enums));
+}
+
+set<string> Parser::supportedProtocols(uint8_t component_id)
+{
+    auto iter = _supported_protocols.find(component_id);
+    if (iter == _supported_protocols.end())
+        return {};
+    return iter->second;
 }
 
 }  // namespace parser

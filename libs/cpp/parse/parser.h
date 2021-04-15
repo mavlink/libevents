@@ -6,6 +6,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -149,6 +150,10 @@ public:
             _config.profile = profile;
     }
 
+    bool hasDefinitions() const { return !_events.empty(); }
+
+    std::set<std::string> supportedProtocols(uint8_t component_id);
+
 private:
     bool loadDefinitions(const nlohmann::json& j, translate_func translate);
     EnumDefinition* findEnumDefinition(const std::string& event_namespace, const std::string& type);
@@ -156,6 +161,7 @@ private:
     EnumDefinitions _enums;
     EventDefinitions _events;
     Config _config;
+    std::map<uint32_t, std::set<std::string>> _supported_protocols;
 };
 
 }  // namespace parser
