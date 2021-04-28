@@ -13,8 +13,10 @@ fi
 
 # JSON files
 pushd "$DIR"/..
-json_files=(events/common.json libs/test.json)
-for json in ${json_files[@]}; do
+
+function check_json_format() {
+	json="$1"
+	echo "Checking format for $json"
 	cp $json $json.tmp
 	./scripts/format_json.sh $json.tmp
     if ! cmp $json $json.tmp >/dev/null 2>&1; then
@@ -24,9 +26,15 @@ for json in ${json_files[@]}; do
 		exit 1
     fi
 	rm $json.tmp
+}
+
+json_files=(events/common.json libs/test.json)
+for json in ${json_files[@]}; do
+	check_json_format "$json"
 	echo "Validating $json"
 	./scripts/validate.py $json
 done
+check_json_format validation/schema.json
 
 ./scripts/generate_all.sh --check || (echo -e "Run\n./scripts/generate_all.sh\nand commit the changes\n" && exit -1)
 
