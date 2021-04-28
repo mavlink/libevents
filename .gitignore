@@ -8,6 +8,8 @@
 .~lock.*
 *.orig
 
+*.tmp
+
 # Prerequisites
 *.d
 
