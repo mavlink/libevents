@@ -85,17 +85,19 @@ def add_info(events, base_types):
     """
     if not "components" in events:
         return
-    for comp in events["components"]:
+    for comp_id in events["components"]:
+        comp = events["components"][comp_id]
         if not "event_groups" in comp:
             continue
-        comp_id = comp["component_id"]
         namespace = comp["namespace"]
-        for group in comp["event_groups"]:
+        for group_name in comp["event_groups"]:
+            group = comp["event_groups"][group_name]
             if not "events" in group:
                 continue
-            for event in group["events"]:
+            for event_sub_id in group["events"]:
+                event = group["events"][event_sub_id]
 
-                event["id"] = (comp_id << 24) | event["sub_id"]
+                event["id"] = (int(comp_id) << 24) | int(event_sub_id)
 
                 if "arguments" in event:
                     for arg in event["arguments"]:

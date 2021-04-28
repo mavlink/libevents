@@ -24,13 +24,15 @@ def base_type_from_enum(events, default_namespace: str, enum: str):
     else:
         namespace = default_namespace
         enum_type = enum
-    for comp in events["components"]:
+    for comp_id in events["components"]:
+        comp = events["components"][comp_id]
         if comp["namespace"] != namespace:
             continue
         if not "enums" in comp:
             continue
-        for e in comp["enums"]:
-            if e["name"] == enum_type:
+        for enum_name in comp["enums"]:
+            e = comp["enums"][enum_name]
+            if enum_name == enum_type:
                 return (e["type"], namespace+'::'+enum_type)
     raise Exception("enum '{:}' definition not found.\nSupported base types: {}" \
                     .format(enum, list(base_types.keys())))

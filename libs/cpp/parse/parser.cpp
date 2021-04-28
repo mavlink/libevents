@@ -430,10 +430,11 @@ bool Parser::loadDefinitions(const json& j, translate_func translate)
     }
     try {
         // load enums first
-        for (const auto& comp_iter : j["components"].items()) {
+        for (json::const_iterator comp_iter = j["components"].begin(); comp_iter != j["components"].end();
+             ++comp_iter) {
             const auto& component = comp_iter.value();
 
-            if (!component.contains("component_id") || !component.contains("namespace")) {
+            if (!component.contains("namespace")) {
                 // invalid definition
                 continue;
             }
@@ -442,12 +443,13 @@ bool Parser::loadDefinitions(const json& j, translate_func translate)
             LIBEVENTS_PARSER_DEBUG_PRINTF("Component: ns=%s\n", event_namespace.c_str());
 
             if (component.contains("enums")) {
-                for (const auto& enum_iter : component["enums"].items()) {
+                for (json::const_iterator enum_iter = component["enums"].begin(); enum_iter != component["enums"].end();
+                     ++enum_iter) {
                     const auto& event_enum = enum_iter.value();
 
                     std::unique_ptr<EnumDefinition> enum_def{new EnumDefinition{}};
                     enum_def->event_namespace = event_namespace;
-                    enum_def->name = event_enum.at("name").get<string>();
+                    enum_def->name = enum_iter.key();
                     string enum_type = event_enum.at("type").get<string>();
 
                     if (event_enum.contains("description")) {
@@ -467,9 +469,10 @@ bool Parser::loadDefinitions(const json& j, translate_func translate)
 
                     // entries
                     if (event_enum.contains("entries")) {
-                        for (const auto& entry_iter : event_enum["entries"].items()) {
+                        for (json::const_iterator entry_iter = event_enum["entries"].begin();
+                             entry_iter != event_enum["entries"].end(); ++entry_iter) {
                             const auto& entry = entry_iter.value();
-                            uint64_t value = entry.at("value").get<uint64_t>();
+                            uint64_t value = std::stoull(entry_iter.key());
                             EnumEntryDefinition entry_def;
                             entry_def.name = entry.at("name").get<string>();
                             entry_def.description = translate(entry.at("description").get<string>());
@@ -485,25 +488,28 @@ bool Parser::loadDefinitions(const json& j, translate_func translate)
         }
 
         // load events
-        for (const auto& comp_iter : j["components"].items()) {
+        for (json::const_iterator comp_iter = j["components"].begin(); comp_iter != j["components"].end();
+             ++comp_iter) {
             const auto& component = comp_iter.value();
 
-            if (!component.contains("component_id") || !component.contains("namespace")) {
+            if (!component.contains("namespace")) {
                 // invalid definition
                 continue;
             }
 
             string event_namespace = component["namespace"].get<string>();
-            uint32_t component_id = component["component_id"].get<uint32_t>() & 0xff;
+            uint32_t component_id = std::stoul(comp_iter.key()) & 0xff;
             LIBEVENTS_PARSER_DEBUG_PRINTF("Component: id=%i, ns=%s\n", component_id, event_namespace.c_str());
 
             if (component.contains("event_groups")) {
-                for (const auto& event_group_iter : component["event_groups"].items()) {
+                for (json::const_iterator event_group_iter = component["event_groups"].begin();
+                     event_group_iter != component["event_groups"].end(); ++event_group_iter) {
                     const auto& event_group = event_group_iter.value();
-                    string event_group_name = event_group.at("name").get<string>();
+                    string event_group_name = event_group_iter.key();
                     LIBEVENTS_PARSER_DEBUG_PRINTF("Event group: %s\n", event_group_name.c_str());
 
-                    for (const auto& event_iter : event_group["events"].items()) {
+                    for (json::const_iterator event_iter = event_group["events"].begin();
+                         event_iter != event_group["events"].end(); ++event_iter) {
                         const auto& event = event_iter.value();
 
                         std::unique_ptr<EventDefinition> event_def{new EventDefinition{}};
@@ -517,7 +523,8 @@ bool Parser::loadDefinitions(const json& j, translate_func translate)
                             event_def->description = translate(event.at("description").get<string>());
                         }
 
-                        event_def->id = event.at("sub_id").get<uint32_t>() | (component_id << 24);
+                        uint32_t sub_id = std::stoul(event_iter.key()) & 0xffffff;
+                        event_def->id = sub_id | (component_id << 24);
                         LIBEVENTS_PARSER_DEBUG_PRINTF("  Event: %s, ID=0x%08x, msg: %s\n", event_def->name.c_str(),
                                                       event_def->id, event_def->message.c_str());
 

@@ -69,33 +69,36 @@ static inline Log externalLogLevel(uint8_t log_levels) {
 }
 
 {# all enums first #}
-{% for component in events.components -%}
+{% for component_id in events.components -%}
+{% set component = events.components[component_id] -%}
 {% if "enums" in component -%}
-namespace {{ component.namespace }} // component id: {{ component.component_id }}
+namespace {{ component.namespace }} // component id: {{ component_id }}
 {
 namespace enums
 {
 
-{% for enum in component.enums -%}
+{% for enum_name in component.enums -%}
+{% set enum = component.enums[enum_name] -%}
 {% if enum.description -%}
 /**
  {{ enum.description }}
 */
 {% endif -%}
-enum class {{ enum.name }} : {{ enum.type }} {
-{%- for entry in enum.entries %}
-	{{ entry.name }} = {{ entry.value }}, ///< {{ entry.description }}
+enum class {{ enum_name }} : {{ enum.type }} {
+{%- for value in enum.entries -%}
+{% set entry = enum.entries[value] %}
+	{{ entry.name }} = {{ value }}, ///< {{ entry.description }}
 {%- endfor %}
 };
 
 {# convenience methods #}
 {% if enum.is_bitfield -%}
-static inline {{ enum.name }} operator|({{ enum.name }} a, {{ enum.name }} b)
+static inline {{ enum_name }} operator|({{ enum_name }} a, {{ enum_name }} b)
 {
-	return static_cast<{{ enum.name }}>(static_cast<{{ enum.type }}>(a) | static_cast<{{ enum.type }}>(b));
+	return static_cast<{{ enum_name }}>(static_cast<{{ enum.type }}>(a) | static_cast<{{ enum.type }}>(b));
 }
 
-static inline bool operator&({{ enum.name }} a, {{ enum.name }} b)
+static inline bool operator&({{ enum_name }} a, {{ enum_name }} b)
 {
 	return static_cast<{{ enum.type }}>(a) & static_cast<{{ enum.type }}>(b);
 }
@@ -108,14 +111,17 @@ static inline bool operator&({{ enum.name }} a, {{ enum.name }} b)
 {% endfor %}
 
 
-{% for component in events.components -%}
-namespace {{ component.namespace }} // component id: {{ component.component_id }}
+{% for component_id in events.components -%}
+{% set component = events.components[component_id] -%}
+namespace {{ component.namespace }} // component id: {{ component_id }}
 {
 
-{% for event_group in component.event_groups -%}
-// Event group {{ event_group.name }}
+{% for group_name in component.event_groups -%}
+{%- set event_group = component.event_groups[group_name] -%}
+// Event group {{ group_name }}
 
-{% for event in event_group.events -%}
+{% for event_sub_id in event_group.events -%}
+{% set event = event_group.events[event_sub_id] -%}
 /**
  * Create event '{{ event.name }}'.
  * Message: {{ event.message }}
@@ -158,8 +164,10 @@ static inline void decode_{{ event.name }}(const EventType &event
 
 {# Enum containing all event ID's for current namespace #}
 enum class event_id_t : uint32_t {
-{%- for event_group in component.event_groups -%}
-{% for event in event_group.events %}
+{%- for group_name in component.event_groups -%}
+{%- set event_group = component.event_groups[group_name] -%}
+{% for event_sub_id in event_group.events -%}
+{% set event = event_group.events[event_sub_id] %}
 	{{ event.name }} = {{ event.id }},
 {%- endfor -%}
 {% endfor %}

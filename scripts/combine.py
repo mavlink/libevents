@@ -39,11 +39,11 @@ def main():
                 continue
 
             # merge new_events into events
-            for component in new_events["components"]:
-                comp_id = component["component_id"]
-                matching_comp = [c for c in events["components"] if comp_id == c["component_id"]]
-                if matching_comp:
-                    matching_comp = matching_comp[0]
+            for comp_id in new_events["components"]:
+                component = new_events["components"][comp_id]
+
+                if comp_id in events["components"]:
+                    matching_comp = events["components"][comp_id]
 
                     # same component already exists: try to merge
 
@@ -51,43 +51,40 @@ def main():
                         "Namespaces with equal component ID's must match"
 
                     # enums
-                    for enum in component.get("enums", []):
+                    for enum_name in component.get("enums", []):
+                        enum = component['enums'][enum_name]
                         if not "enums" in matching_comp:
-                            matching_comp["enums"] = []
-                        assert not any(enum["name"] == e["name"] \
-                            for e in matching_comp["enums"]), \
-                            "enum collision: {:}".format(enum["name"])
-                        matching_comp["enums"].append(enum)
+                            matching_comp["enums"] = {}
+                        assert not enum_name in matching_comp["enums"], \
+                            "enum collision: {:}".format(enum_name)
+                        matching_comp["enums"][enum_name] = enum
 
                     # event groups
-                    for group in component.get("event_groups", []):
-                        group_name = group["name"]
-                        if "event_groups" in matching_comp:
-                            matching_group = [g for g in matching_comp["event_groups"]
-                                              if group_name == g["name"]]
-                        else:
-                            matching_group = None
+                    for group_name in component.get("event_groups", []):
+                        group = component['event_groups'][group_name]
+                        if not "event_groups" in matching_comp:
+                            matching_comp["event_groups"] = {}
 
-                        if matching_group:
-                            matching_group = matching_group[0]
+                        if group_name in matching_comp["event_groups"]:
+                            matching_group = matching_comp["event_groups"][group_name]
                             # events
-                            for event in group["events"]:
-                                assert not any(event["sub_id"] == e["sub_id"] \
-                                    for e in matching_group["events"]), \
-                                    "ID collision: {:}".format(event["sub_id"])
+                            for event_sub_id in group["events"]:
+                                event = group["events"][event_sub_id]
+                                assert not event_sub_id in matching_group["events"], \
+                                    "ID collision: {:}".format(event_sub_id)
                                 assert not any(event["name"] == e["name"] \
                                     for e in matching_group["events"]), \
                                     "event name collision: {:}".format(event["name"])
-                                matching_group["events"].append(event)
+                                matching_group["events"][event_sub_id] = event
                         else:
-                            matching_comp["event_groups"].append(group)
+                            matching_comp["event_groups"][group_name] = group
 
                     if "supported_protocols" in component:
                         matching_comp["supported_protocols"] = \
                             list(set(matching_comp.get("supported_protocols", []) +
                             component["supported_protocols"]))
                 else:
-                    events["components"].append(component)
+                    events["components"][comp_id] = component
 
     with open(output_file, 'w') as f:
         f.write(json.dumps(events, indent=2))

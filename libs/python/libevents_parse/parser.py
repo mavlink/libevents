@@ -116,8 +116,9 @@ class ParsedEvent:
                     if had_bit:
                         ret_value += "|"
                     found = False
-                    for entry in enum['entries']:
-                        if entry['value'] == bit:
+                    for entry_value in enum['entries']:
+                        entry = enum['entries'][entry_value]
+                        if int(entry_value) == bit:
                             ret_value += entry['description']
                             found = True
                             break
@@ -126,9 +127,10 @@ class ParsedEvent:
                     had_bit = True
             return ret_value
 
-        for entry in enum['entries']:
+        for entry_value in enum['entries']:
+            entry = enum['entries'][entry_value]
             # could turn this into a map to make this more efficient...
-            if entry['value'] == value:
+            if int(entry_value) == value:
                 return entry['description']
         return '(unknown: {})'.format(value)
 
@@ -271,33 +273,53 @@ class Parser:
         if version < 1:
             raise ParserException("Unexpected version {}".format(version))
         self._events = json_data
+
+        # convert keys from string to int
+        components_int = {}
+        for comp_id in self._events.get("components", []):
+            components_int[int(comp_id)] = self._events["components"][comp_id]
+            comp = components_int[int(comp_id)]
+            for group_name in comp.get("event_groups", []):
+                group = comp["event_groups"][group_name]
+                if not "events" in group:
+                    continue
+                events_int = {}
+                for event_sub_id in group["events"]:
+                    events_int[int(event_sub_id)] = group["events"][event_sub_id]
+                group["events"] = events_int
+        self._events["components"] = components_int
+
         # store enums separately for faster access
-        for comp in self._events.get("components", []):
+        for comp_id in self._events.get("components", []):
+            comp = self._events["components"][comp_id]
             namespace = comp["namespace"]
-            for enum in comp.get("enums", []):
-                self._enums[namespace+'::'+enum['name']] = enum
+            for enum_name in comp.get("enums", []):
+                enum = comp["enums"][enum_name]
+                self._enums[namespace+'::'+enum_name] = enum
 
     def parse(self, event_id: int, arguments: bytes) -> ParsedEvent:
         """ Parse event from event ID and arguments """
         # Find ID
         events = self._events
-        for comp in events.get("components", []):
-            comp_id = comp["component_id"]
-            for group in comp.get("event_groups", []):
-                for event in group.get("events", []):
-                    cur_id = (comp_id << 24) | event['sub_id']
-                    if event_id == cur_id:
-                        # pass some additional info
-                        event_extras = {
-                            'id': cur_id,
-                            'namespace': comp["namespace"],
-                            'group': group["name"],
-                            'enums': self._enums,
-                            'url-formatter': self._url_formatter,
-                            'param-formatter': self._param_formatter,
-                            }
-                        return ParsedEvent(event, event_extras, arguments, events,
-                                           self._profile, self._debug)
+        search_comp_id = (event_id >> 24) & 0xff
+        search_event_sub_id = event_id & 0xffffff
+        if search_comp_id in events.get("components", []):
+            comp = events["components"][search_comp_id]
+            for group_name in comp.get("event_groups", []):
+                group = comp["event_groups"][group_name]
+                if search_event_sub_id in group.get("events", []):
+                    event = group["events"][search_event_sub_id]
+                    # pass some additional info
+                    event_extras = {
+                        'id': event_id,
+                        'namespace': comp["namespace"],
+                        'group': group_name,
+                        'enums': self._enums,
+                        'url-formatter': self._url_formatter,
+                        'param-formatter': self._param_formatter,
+                        }
+                    return ParsedEvent(event, event_extras, arguments, events,
+                                       self._profile, self._debug)
         return None
 
     def set_profile(self, profile: str):

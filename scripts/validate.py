@@ -22,6 +22,15 @@ except ImportError as e:
     print("")
     sys.exit(1)
 
+def dict_raise_on_duplicates(ordered_pairs):
+    """Reject duplicate keys"""
+    return_dict = {}
+    for key, value in ordered_pairs:
+        if key in return_dict:
+            raise ValueError("duplicate key: {:}".format(key))
+        return_dict[key] = value
+    return return_dict
+
 def main():
     """ main method """
     # Parse command line arguments
@@ -53,7 +62,7 @@ def main():
         if verbose:
             print("Validating {:}".format(input_file))
         with open(input_file, 'r') as json_file:
-            events = json.load(json_file)
+            events = json.load(json_file, object_pairs_hook=dict_raise_on_duplicates)
 
         try:
             validate(instance=events, schema=schema)
@@ -231,42 +240,35 @@ def extra_validation(events, config):
 
     if not "components" in events:
         return
-    all_comp_id = set()
     all_namespaces = set()
-    for comp in events["components"]:
-        comp_id = comp["component_id"]
+    for comp_id in events["components"]:
+        icomp_id = int(comp_id)
+        assert 0 <= icomp_id <= 255, "component id out of range: {}".format(icomp_id)
+        comp = events["components"][comp_id]
         namespace = comp["namespace"]
 
-        if comp_id in all_comp_id:
-            raise Exception("Duplicate component ID: {:}".format(comp_id))
-        all_comp_id.add(comp_id)
         if namespace in all_namespaces:
             raise Exception("Duplicate namespace: {:}".format(namespace))
         all_namespaces.add(namespace)
 
 
-        if "enums" in comp:
-            all_enum_names = set()
-            for enum in comp["enums"]:
-                if enum['name'] in all_enum_names:
-                    raise Exception("Duplicate enum: {:} in {:}".format(
-                        enum['name'], namespace))
-                all_enum_names.add(enum['name'])
-
         if "event_groups" in comp:
             all_event_id = set()
             all_event_names = set()
-            for group in comp["event_groups"]:
+            for group_name in comp["event_groups"]:
+                group = comp["event_groups"][group_name]
                 if not "events" in group:
                     continue
-                group_name = group["name"]
-                for event in group["events"]:
+                for event_sub_id in group["events"]:
+                    sub_id = int(event_sub_id)
+                    assert 0 <= sub_id <= 16777215, "event id out of range: {}".format(sub_id)
+                    event = group["events"][event_sub_id]
                     event_name = event["name"]
 
-                    if event["sub_id"] in all_event_id:
+                    if event_sub_id in all_event_id:
                         raise Exception("Duplicate event id: {:} ({:})".format(
-                            event['sub_id'], event['name']))
-                    all_event_id.add(event["sub_id"])
+                            event_sub_id, event['name']))
+                    all_event_id.add(event_sub_id)
                     if event_name in all_event_names:
                         raise Exception("Duplicate event name: {:}".format(event_name))
                     all_event_names.add(event_name)
