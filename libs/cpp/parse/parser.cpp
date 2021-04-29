@@ -15,6 +15,11 @@ using namespace std;
 #define LIBEVENTS_PARSER_DEBUG_PRINTF(...)
 #endif
 
+#define UNUSED(expr)  \
+    do {              \
+        (void)(expr); \
+    } while (0)
+
 static const std::string whitespace = " \n\r\t\f\v";
 
 static inline std::string& ltrim(std::string& s)
@@ -399,6 +404,7 @@ bool Parser::loadDefinitionsFile(const string& definitions_file, translate_func 
         return loadDefinitions(j, translate);
 
     } catch (const json::exception& e) {
+        UNUSED(e);
         LIBEVENTS_PARSER_DEBUG_PRINTF("json exception: %s\n", e.what());
     }
     return false;
@@ -410,6 +416,7 @@ bool Parser::loadDefinitions(const string& definitions, translate_func translate
         return loadDefinitions(json::parse(definitions), translate);
 
     } catch (const json::exception& e) {
+        UNUSED(e);
         LIBEVENTS_PARSER_DEBUG_PRINTF("json exception: %s\n", e.what());
     }
     return false;
@@ -587,6 +594,7 @@ bool Parser::loadDefinitions(const json& j, translate_func translate)
         }
 
     } catch (const json::exception& e) {
+        UNUSED(e);
         LIBEVENTS_PARSER_DEBUG_PRINTF("json exception: %s\n", e.what());
         return false;
     }
