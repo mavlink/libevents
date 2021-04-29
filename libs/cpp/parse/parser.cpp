@@ -15,23 +15,23 @@ using namespace std;
 #define LIBEVENTS_PARSER_DEBUG_PRINTF(...)
 #endif
 
-string& ltrim(std::string& str)
+static const std::string whitespace = " \n\r\t\f\v";
+
+static inline std::string& ltrim(std::string& s)
 {
-    auto it2 =
-        std::find_if(str.begin(), str.end(), [](char ch) { return !std::isspace<char>(ch, std::locale::classic()); });
-    str.erase(str.begin(), it2);
-    return str;
+    size_t start = s.find_first_not_of(whitespace);
+    s = (start == std::string::npos) ? "" : s.substr(start);
+    return s;
 }
 
-string& rtrim(std::string& str)
+static inline std::string& rtrim(std::string& s)
 {
-    auto it1 =
-        std::find_if(str.rbegin(), str.rend(), [](char ch) { return !std::isspace<char>(ch, std::locale::classic()); });
-    str.erase(it1.base(), str.end());
-    return str;
+    size_t end = s.find_last_not_of(whitespace);
+    s = (end == std::string::npos) ? "" : s.substr(0, end + 1);
+    return s;
 }
 
-string& trim(std::string& str)
+static inline string& trim(std::string& str)
 {
     return ltrim(rtrim(str));
 }
