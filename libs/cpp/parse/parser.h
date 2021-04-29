@@ -92,8 +92,7 @@ public:
         } value;
     };
 
-    ParsedEvent(const EventType& event, const Config& config, const EventDefinition& event_definition,
-                const EnumDefinitions& enums);
+    ParsedEvent(const EventType& event, const Config& config, const EventDefinition& event_definition);
 
     uint32_t id() const { return _event_definition.id; }
     const std::string& name() const { return _event_definition.name; }
@@ -120,7 +119,6 @@ private:
     const EventType _event;
     const Config& _config;
     const EventDefinition& _event_definition;
-    const EnumDefinitions& _enums;
 };
 
 /**

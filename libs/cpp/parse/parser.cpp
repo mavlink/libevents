@@ -81,9 +81,8 @@ int baseTypeSize(BaseType base_type)
     return 0;
 }
 
-ParsedEvent::ParsedEvent(const EventType& event, const Config& config, const EventDefinition& event_definition,
-                         const EnumDefinitions& enums)
-    : _event(event), _config(config), _event_definition(event_definition), _enums(enums)
+ParsedEvent::ParsedEvent(const EventType& event, const Config& config, const EventDefinition& event_definition)
+    : _event(event), _config(config), _event_definition(event_definition)
 {
 }
 
@@ -623,7 +622,7 @@ unique_ptr<ParsedEvent> Parser::parse(const EventType& event)
     if (iter == _events.end()) {
         return nullptr;
     }
-    return unique_ptr<ParsedEvent>(new ParsedEvent(event, _config, *iter->second.get(), _enums));
+    return unique_ptr<ParsedEvent>(new ParsedEvent(event, _config, *iter->second.get()));
 }
 
 set<string> Parser::supportedProtocols(uint8_t component_id)
