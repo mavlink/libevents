@@ -85,10 +85,14 @@ namespace enums
 */
 {% endif -%}
 enum class {{ enum_name }} : {{ enum.type }} {
+{%- set values = [] -%}
 {%- for value in enum.entries -%}
 {% set entry = enum.entries[value] %}
+{%- if values.append(value|int) %}{% endif %}
 	{{ entry.name }} = {{ value }}, ///< {{ entry.description }}
 {%- endfor %}
+
+	_max = {{ values|max }}
 };
 
 {# convenience methods #}

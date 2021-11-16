@@ -104,6 +104,8 @@ enum class health_component_t : uint64_t {
 	payload = 8388608, ///< Payload
 	global_position_estimate = 16777216, ///< Global position estimate
 	storage = 33554432, ///< Storage
+
+	_max = 33554432
 };
 
 
@@ -128,6 +130,8 @@ enum class navigation_mode_category_t : uint8_t {
 	position = 32, ///< Position-controlled modes
 	autonomous = 64, ///< Autonomous navigation modes
 	mission = 128, ///< (Planned) Mission modes
+
+	_max = 128
 };
 
 
@@ -150,6 +154,8 @@ enum class calibration_type_t : uint16_t {
 	level = 8, ///< Level
 	airspeed = 16, ///< Airspeed
 	rc = 32, ///< RC
+
+	_max = 32
 };
 
 
@@ -172,6 +178,8 @@ enum class calibration_sides_t : uint8_t {
 	right_side_down = 8, ///< Right Side Down
 	upside_down = 16, ///< Upside Down
 	down = 32, ///< Down
+
+	_max = 32
 };
 
 
@@ -192,6 +200,8 @@ enum class calibration_action_t : uint8_t {
 	next_orientation = 1, ///< Switch to next orientation
 	rotate = 2, ///< Rotate as shown
 	hold_still = 3, ///< Hold still
+
+	_max = 3
 };
 
 
@@ -202,6 +212,8 @@ enum class calibration_result_t : uint8_t {
 	success = 0, ///< Success
 	failed = 1, ///< Failed
 	aborted = 2, ///< Aborted
+
+	_max = 2
 };
 
 
