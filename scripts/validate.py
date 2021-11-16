@@ -51,7 +51,7 @@ def main():
 
     cur_dir = os.path.dirname(os.path.realpath(__file__))
     schema_file = os.path.join(cur_dir, '../validation/schema.json')
-    with open(schema_file, 'r') as stream:
+    with open(schema_file, 'r', encoding='utf-8') as stream:
         schema = json.load(stream)
 
     # read configuration
@@ -61,7 +61,7 @@ def main():
     for input_file in input_files:
         if verbose:
             print("Validating {:}".format(input_file))
-        with open(input_file, 'r') as json_file:
+        with open(input_file, 'r', encoding='utf-8') as json_file:
             events = json.load(json_file, object_pairs_hook=dict_raise_on_duplicates)
 
         try:

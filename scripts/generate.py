@@ -66,7 +66,7 @@ def main():
     constants = {}
     constants["base_types"] = common.base_types
 
-    with open(input_file, 'r') as json_file:
+    with open(input_file, 'r', encoding='utf-8') as json_file:
         events = json.load(json_file)
         assert "version" in events
         assert events["version"] == 1
@@ -128,7 +128,7 @@ def generate_output(events, config, constants, template_files, output_dir):
         template = jinja_env.get_template(template_basename)
         output_file = os.path.join(output_dir, os.path.splitext(template_basename)[0])
 
-        with open(output_file, 'w') as f:
+        with open(output_file, 'w', encoding='utf-8') as f:
             f.write(template.render(events=events, config=config,
                                     constants=constants))
 

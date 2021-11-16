@@ -43,6 +43,7 @@ def read_config():
     """
     conf = configparser.ConfigParser()
     cur_dir = os.path.dirname(os.path.realpath(__file__))
-    conf.read_file(open(os.path.join(cur_dir, '../config.ini')))
+    with open(os.path.join(cur_dir, '../config.ini'), encoding='utf-8') as config_file:
+        conf.read_file(config_file)
     return dict(conf.items("events"))
 
