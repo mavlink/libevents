@@ -262,7 +262,7 @@ class Parser:
 
     def load_definition_file(self, json_file: str):
         """ load event definitions from a json file """
-        with open(json_file, 'r') as j:
+        with open(json_file, 'r', encoding='utf-8') as j:
             self.load_definitions(json.load(j))
 
     def load_definitions(self, json_data: dict):

@@ -29,7 +29,7 @@ def main():
 
     events = {}
     for input_file in input_files:
-        with open(input_file, 'r') as json_file:
+        with open(input_file, 'r', encoding='utf-8') as json_file:
             new_events = json.load(json_file)
             assert "version" in new_events
             assert new_events["version"] == 1
@@ -86,7 +86,7 @@ def main():
                 else:
                     events["components"][comp_id] = component
 
-    with open(output_file, 'w') as f:
+    with open(output_file, 'w', encoding='utf-8') as f:
         f.write(json.dumps(events, indent=2))
 
 if __name__ == "__main__":
