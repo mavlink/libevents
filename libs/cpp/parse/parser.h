@@ -33,6 +33,7 @@ struct EnumDefinition {
     BaseType type;
     std::string description;
     bool is_bitfield;
+    std::string entry_separator = "|";  ///< used to separate entries if is_bitfield is set
     std::map<uint64_t, EnumEntryDefinition> entries;
 };
 

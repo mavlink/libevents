@@ -110,11 +110,12 @@ class ParsedEvent:
             size = _base_types[enum['type']]['size']
             ret_value = ""
             had_bit = False
+            separator = enum.get('separator', '|')
             for i in range(size*8):
                 bit = 1<<i
                 if value & bit:
                     if had_bit:
-                        ret_value += "|"
+                        ret_value += separator
                     found = False
                     for entry_value in enum['entries']:
                         entry = enum['entries'][entry_value]

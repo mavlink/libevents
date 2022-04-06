@@ -148,7 +148,7 @@ int main(int argc, char** argv)
 
         printf("message=%s\n", parsed_event->message().c_str());
         printf("description=%s\n", parsed_event->description().c_str());
-        assert(parsed_event->message() == "Bitfield value: Bit 2|Bit 3");
+        assert(parsed_event->message() == "Bitfield value: Bit 2/ Bit 3");
         assert(parsed_event->description() == "");
 
         assert(a & events::test2::enums::enum_bitfield_t::bit2);

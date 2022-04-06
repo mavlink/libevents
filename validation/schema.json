@@ -52,6 +52,10 @@
                                             "description": "Set to true if this enum is a bitfield.",
                                             "type": "boolean"
                                         },
+                                        "separator": {
+                                            "description": "Optional separator for multiple entries if is_bitfield is set. The default is '|'",
+                                            "type": "string"
+                                        },
                                         "entries": {
                                             "type": "object",
                                             "description": "The object key is the value.",

@@ -213,7 +213,7 @@ string ParsedEvent::getFormattedArgument(int argument_idx, int num_decimal_digit
                 uint64_t bit = ((uint64_t)1 << i);
                 if ((value & bit)) {
                     if (had_bit) {
-                        argument_stream << "|";  // delimiter
+                        argument_stream << enum_def->entry_separator;  // delimiter
                     }
                     auto entry_iter = enum_def->entries.find(bit);
                     if (entry_iter == enum_def->entries.end()) {
@@ -463,6 +463,9 @@ bool Parser::loadDefinitions(const json& j, translate_func translate)
                     }
                     if (event_enum.contains("is_bitfield")) {
                         enum_def->is_bitfield = event_enum.at("is_bitfield").get<bool>();
+                    }
+                    if (event_enum.contains("separator")) {
+                        enum_def->entry_separator = event_enum.at("separator").get<string>();
                     }
 
                     LIBEVENTS_PARSER_DEBUG_PRINTF("Enum: %s, type=%s\n", enum_def->name.c_str(), enum_type.c_str());

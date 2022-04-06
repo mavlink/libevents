@@ -116,7 +116,7 @@ assert parsed_event.num_arguments() == 1
 
 print("message={}".format(parsed_event.message()))
 print("description={}".format(parsed_event.description()))
-assert parsed_event.message() == "Bitfield value: Bit 2|Bit 3"
+assert parsed_event.message() == "Bitfield value: Bit 2/ Bit 3"
 assert parsed_event.description() == ""
 print("")
 

@@ -143,6 +143,7 @@
                 "enum_bitfield_t": {
                     "type": "uint8_t",
                     "is_bitfield": true,
+                    "separator": "/ ",
                     "entries": {
                         "1": {
                             "name": "bit1",
