@@ -108,6 +108,7 @@ public:
     int numArguments() const { return _event_definition.arguments.size(); }
     const EventArgumentDefinition& argument(int index) const { return _event_definition.arguments[index]; }
     Argument argumentValue(int index) const;
+    uint64_t argumentValueInt(int index) const;
 
     const EventType& eventData() const { return _event; }
 

@@ -395,6 +395,28 @@ ParsedEvent::Argument ParsedEvent::argumentValue(int index) const
     return value;
 }
 
+uint64_t ParsedEvent::argumentValueInt(int index) const
+{
+    if (index >= (int)_event_definition.arguments.size()) {
+        return 0;
+    }
+    Argument value = argumentValue(index);
+    switch (_event_definition.arguments[index].type) {
+        case BaseType::uint8_t: return (uint64_t)value.value.val_uint8_t;
+        case BaseType::int8_t: return (uint64_t)value.value.val_int8_t;
+        case BaseType::uint16_t: return (uint64_t)value.value.val_uint16_t;
+        case BaseType::int16_t: return (uint64_t)value.value.val_int16_t;
+        case BaseType::uint32_t: return (uint64_t)value.value.val_uint32_t;
+        case BaseType::int32_t: return (uint64_t)value.value.val_int32_t;
+        case BaseType::uint64_t: return (uint64_t)value.value.val_uint64_t;
+        case BaseType::int64_t: return (uint64_t)value.value.val_int64_t;
+        case BaseType::float_t: return (uint64_t)value.value.val_float;
+        case BaseType::invalid: break;
+    }
+
+    return 0;
+}
+
 bool Parser::loadDefinitionsFile(const string& definitions_file, translate_func translate)
 {
     try {
