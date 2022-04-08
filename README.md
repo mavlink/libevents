@@ -65,14 +65,22 @@ A UI should not display unkown groups.
 Special groups:
 - *calibration*: used for the sensor/RC calibration protocol
 - *health* and *arming_check*: used to report health and arming check results.
-  Apart from the 2 summary messages, each event needs to have at least 2 arguments:
-  - `common::navigation_mode_category_t modes`: affected flight modes (bitmask)
-  - `uint8_t health_component_index`: affected health component index (to the `health_component_t` bitset), can be -1 if none applies.
+  Apart from the 2 summary messages (via `type='summary'`), each event needs to have at least 2 arguments:
+  - `<navigation_group>`: affected flight modes (bitmask)
+  - `uint8_t health_component_index`: affected health component index (to the `<health_component>` bitset), can be 0 if none applies.
+
+  `<navigation_group>` and `<health_component>` are custom enums (bitsets) based on any unsigned integer.
+  The mapping from the navigation groups to custom_modes is defined via `navigation_mode_groups` in the json.
+  The first entry (1. bit) in `<health_component>` must always be 'none'.
 
   The order of sending is:
   - `arming_check_summary`
   - set of N health and arming check events
   - `health_summary`
+
+  The set of checks can be split into multiple chunks that the receiver then combines.
+
+  See libs/cpp/parse/health_and_arming_checks.h for an implementation.
 
 #### common namespace
 Since events in the common namespace are used by multiple components, they cannot be changed arbitrarily.

@@ -51,6 +51,7 @@ struct EventDefinition {
     uint32_t id;
 
     std::string group_name;
+    std::string type;
 
     std::string name;
     std::string message;
@@ -104,6 +105,7 @@ public:
     std::string description() const;
 
     const std::string& group() const { return _event_definition.group_name; }
+    const std::string& type() const { return _event_definition.type; }
 
     int numArguments() const { return _event_definition.arguments.size(); }
     const EventArgumentDefinition& argument(int index) const { return _event_definition.arguments[index]; }
@@ -133,6 +135,10 @@ public:
     Parser() = default;
     ~Parser() = default;
 
+    struct NavigationModeGroups {
+        std::map<int, std::set<uint32_t>> groups;
+    };
+
     using translate_func = std::function<std::string(const std::string&)>;
 
     bool loadDefinitionsFile(
@@ -154,6 +160,8 @@ public:
 
     std::set<std::string> supportedProtocols(uint8_t component_id);
 
+    NavigationModeGroups navigationModeGroups(uint8_t component_id);
+
 private:
     bool loadDefinitions(const nlohmann::json& j, translate_func translate);
     EnumDefinition* findEnumDefinition(const std::string& event_namespace, const std::string& type);
@@ -162,6 +170,7 @@ private:
     EventDefinitions _events;
     Config _config;
     std::map<uint32_t, std::set<std::string>> _supported_protocols;
+    std::map<uint32_t, NavigationModeGroups> _navigation_mode_groups;
 };
 
 }  // namespace parser

@@ -547,6 +547,9 @@ bool Parser::loadDefinitions(const json& j, translate_func translate)
                         event_def->event_namespace = event_namespace;
                         event_def->group_name = event_group_name;
 
+                        if (event.contains("type")) {
+                            event_def->type = event.at("type").get<string>();
+                        }
                         event_def->name = event.at("name").get<string>();
                         event_def->message = translate(event.at("message").get<string>());
 
@@ -616,6 +619,24 @@ bool Parser::loadDefinitions(const json& j, translate_func translate)
                     supported_components.insert(proto);
                 }
             }
+
+            if (component.contains("navigation_mode_groups")) {
+                auto navigation_mode_groups_js = component["navigation_mode_groups"];
+                if (_navigation_mode_groups.find(component_id) == _navigation_mode_groups.end()) {
+                    _navigation_mode_groups[component_id] = {};
+                }
+                NavigationModeGroups& navigation_mode_groups = _navigation_mode_groups[component_id];
+                for (json::const_iterator group_iter = navigation_mode_groups_js["groups"].begin();
+                     group_iter != navigation_mode_groups_js["groups"].end(); ++group_iter) {
+                    const auto& entry = group_iter.value();
+                    std::set<uint32_t> modes;
+                    int value = std::stoull(group_iter.key());
+                    for (json::const_iterator mode_iter = entry.begin(); mode_iter != entry.end(); ++mode_iter) {
+                        modes.insert(mode_iter.value().get<uint32_t>());
+                    }
+                    navigation_mode_groups.groups.emplace(value, std::move(modes));
+                }
+            }
         }
 
     } catch (const json::exception& e) {
@@ -662,6 +683,14 @@ set<string> Parser::supportedProtocols(uint8_t component_id)
 {
     auto iter = _supported_protocols.find(component_id);
     if (iter == _supported_protocols.end())
+        return {};
+    return iter->second;
+}
+
+Parser::NavigationModeGroups Parser::navigationModeGroups(uint8_t component_id)
+{
+    auto iter = _navigation_mode_groups.find(component_id);
+    if (iter == _navigation_mode_groups.end())
         return {};
     return iter->second;
 }

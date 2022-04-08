@@ -83,6 +83,11 @@ def main():
                         matching_comp["supported_protocols"] = \
                             list(set(matching_comp.get("supported_protocols", []) +
                             component["supported_protocols"]))
+
+                    if "navigation_mode_groups" in component:
+                        assert "navigation_mode_groups" not in matching_comp
+                        matching_comp["navigation_mode_groups"] = \
+                            component["navigation_mode_groups"]
                 else:
                     events["components"][comp_id] = component
 

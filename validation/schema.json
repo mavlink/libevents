@@ -124,6 +124,13 @@
                                                             "description": "Detailed description.",
                                                             "type": "string"
                                                         },
+                                                        "type": {
+                                                            "description": "Optional, specifies a type within an event group (valid values depend on event group).",
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "summary"
+                                                            ]
+                                                        },
                                                         "arguments": {
                                                             "type": "array",
                                                             "items": {
@@ -173,6 +180,30 @@
                                 "pattern": "^(calibration|health_and_arming_check)$",
                                 "comment": "Optional list of supported protocols."
                             }
+                        },
+                        "navigation_mode_groups": {
+                            "type": "object",
+                            "description": "Mapping from navigation modes (custom_mode in mavlink) to groups (i.e. a group contains a set of modes)",
+                            "properties": {
+                                "groups": {
+                                    "type": "object",
+                                    "patternProperties": {
+                                        "^[0-9]+$": {
+                                            "description": "mode index, starting with 0",
+                                            "type": "array",
+                                            "items": {
+                                                "type": "integer",
+                                                "description": "Navigation mode (custom_mode)"
+                                            }
+                                        }
+                                    },
+                                    "additionalProperties": false
+                                }
+                            },
+                            "required": [
+                                "groups"
+                            ],
+                            "additionalProperties": false
                         }
                     },
                     "required": [
