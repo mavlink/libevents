@@ -52,6 +52,7 @@ struct EventDefinition {
 
     std::string group_name;
     std::string type;
+    int instance_arg_index{-1};
 
     std::string name;
     std::string message;

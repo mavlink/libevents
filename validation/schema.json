@@ -131,6 +131,10 @@
                                                                 "summary"
                                                             ]
                                                         },
+                                                        "instance_arg_index": {
+                                                            "description": "Optional, specifies an event argument index which defines the instance. The argument must be int. For example a sensor (IMU, battery, ...) event with multiple sensor instances.",
+                                                            "type": "integer"
+                                                        },
                                                         "arguments": {
                                                             "type": "array",
                                                             "items": {

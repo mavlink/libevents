@@ -550,6 +550,10 @@ bool Parser::loadDefinitions(const json& j, translate_func translate)
                         if (event.contains("type")) {
                             event_def->type = event.at("type").get<string>();
                         }
+                        if (event.contains("instance_arg_index")) {
+                            event_def->instance_arg_index = event.at("instance_arg_index").get<int>();
+                        }
+
                         event_def->name = event.at("name").get<string>();
                         event_def->message = translate(event.at("message").get<string>());
 
