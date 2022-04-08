@@ -140,12 +140,8 @@ public:
         std::map<int, std::set<uint32_t>> groups;
     };
 
-    using translate_func = std::function<std::string(const std::string&)>;
-
-    bool loadDefinitionsFile(
-        const std::string& definitions_file, translate_func translate = [](const std::string& s) { return s; });
-    bool loadDefinitions(
-        const std::string& definitions, translate_func translate = [](const std::string& s) { return s; });
+    bool loadDefinitionsFile(const std::string& definitions_file);
+    bool loadDefinitions(const std::string& definitions);
 
     std::unique_ptr<ParsedEvent> parse(const EventType& event);
 
@@ -164,7 +160,7 @@ public:
     NavigationModeGroups navigationModeGroups(uint8_t component_id);
 
 private:
-    bool loadDefinitions(const nlohmann::json& j, translate_func translate);
+    bool loadDefinitions(const nlohmann::json& j);
     EnumDefinition* findEnumDefinition(const std::string& event_namespace, const std::string& type);
 
     EnumDefinitions _enums;

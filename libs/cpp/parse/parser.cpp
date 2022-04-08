@@ -417,13 +417,13 @@ uint64_t ParsedEvent::argumentValueInt(int index) const
     return 0;
 }
 
-bool Parser::loadDefinitionsFile(const string& definitions_file, translate_func translate)
+bool Parser::loadDefinitionsFile(const string& definitions_file)
 {
     try {
         ifstream stream(definitions_file);
         json j;
         stream >> j;
-        return loadDefinitions(j, translate);
+        return loadDefinitions(j);
 
     } catch (const json::exception& e) {
         UNUSED(e);
@@ -432,10 +432,10 @@ bool Parser::loadDefinitionsFile(const string& definitions_file, translate_func 
     return false;
 }
 
-bool Parser::loadDefinitions(const string& definitions, translate_func translate)
+bool Parser::loadDefinitions(const string& definitions)
 {
     try {
-        return loadDefinitions(json::parse(definitions), translate);
+        return loadDefinitions(json::parse(definitions));
 
     } catch (const json::exception& e) {
         UNUSED(e);
@@ -444,7 +444,7 @@ bool Parser::loadDefinitions(const string& definitions, translate_func translate
     return false;
 }
 
-bool Parser::loadDefinitions(const json& j, translate_func translate)
+bool Parser::loadDefinitions(const json& j)
 {
     // version check
     if (!j.contains("version") || j["version"].get<int>() < 1) {
@@ -481,7 +481,7 @@ bool Parser::loadDefinitions(const json& j, translate_func translate)
                     string enum_type = event_enum.at("type").get<string>();
 
                     if (event_enum.contains("description")) {
-                        enum_def->description = translate(event_enum.at("description").get<string>());
+                        enum_def->description = event_enum.at("description").get<string>();
                     }
                     if (event_enum.contains("is_bitfield")) {
                         enum_def->is_bitfield = event_enum.at("is_bitfield").get<bool>();
@@ -506,7 +506,7 @@ bool Parser::loadDefinitions(const json& j, translate_func translate)
                             uint64_t value = std::stoull(entry_iter.key());
                             EnumEntryDefinition entry_def;
                             entry_def.name = entry.at("name").get<string>();
-                            entry_def.description = translate(entry.at("description").get<string>());
+                            entry_def.description = entry.at("description").get<string>();
                             enum_def->entries.emplace(std::make_pair(value, entry_def));
                             LIBEVENTS_PARSER_DEBUG_PRINTF("  value: %" PRIu64 ", name=%s\n", value,
                                                           entry_def.name.c_str());
@@ -555,10 +555,10 @@ bool Parser::loadDefinitions(const json& j, translate_func translate)
                         }
 
                         event_def->name = event.at("name").get<string>();
-                        event_def->message = translate(event.at("message").get<string>());
+                        event_def->message = event.at("message").get<string>();
 
                         if (event.contains("description")) {
-                            event_def->description = translate(event.at("description").get<string>());
+                            event_def->description = event.at("description").get<string>();
                         }
 
                         uint32_t sub_id = std::stoul(event_iter.key()) & 0xffffff;
@@ -575,7 +575,7 @@ bool Parser::loadDefinitions(const json& j, translate_func translate)
                                 arg_def.name = arg.at("name").get<string>();
 
                                 if (arg.contains("description")) {
-                                    arg_def.description = translate(arg.at("description").get<string>());
+                                    arg_def.description = arg.at("description").get<string>();
                                 }
 
                                 string type = arg.at("type").get<string>();
