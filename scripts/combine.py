@@ -72,7 +72,8 @@ def main():
                                 event = group["events"][event_sub_id]
                                 assert not event_sub_id in matching_group["events"], \
                                     "ID collision: {:}".format(event_sub_id)
-                                assert not any(event["name"] == e["name"] \
+                                assert not any(event["name"] == \
+                                    matching_group["events"][e]["name"] \
                                     for e in matching_group["events"]), \
                                     "event name collision: {:}".format(event["name"])
                                 matching_group["events"][event_sub_id] = event
