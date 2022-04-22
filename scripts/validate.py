@@ -231,6 +231,29 @@ def validate_group(event, group_name, event_name, arguments):
             validate_arg_type(event, arguments, 1, 'uint8_t')
             validate_arg_name(event, arguments, 1, 'health_component_index')
 
+def validate_type(event, group_name, event_name, arguments):
+    """ rules for certain types """
+
+    if not 'type' in event:
+        return
+
+    valid_types = []
+    if group_name == 'default':
+        valid_types = ['append_health_and_arming_messages']
+        if event['type'] == valid_types[0]:
+            # arg0 == mode
+            assert arguments[0] == 'uint32_t', \
+                "event '{:}' argument {:} must " \
+                "be of type '{:}', but is '{:}'".format(
+                event_name, 0, 'uint32_t', arguments[0])
+    elif group_name in ('arming_check', 'health'):
+        valid_types = ['summary']
+
+    assert event['type'] in valid_types, \
+            "event '{:}' type must be one of '{:}', but is '{:}'".format(
+            event_name, valid_types, event['type'])
+
+
 def validate_event_arguments(config, event, events, namespace):
     """ ensure all enums exist
         :return: list of argument types (normalized)
@@ -305,8 +328,9 @@ def extra_validation(events, config):
 
                     arguments = validate_event_arguments(config, event, events, namespace)
 
-                    # rules for certain groups
+                    # rules for certain groups & types
                     validate_group(event, group_name, event_name, arguments)
+                    validate_type(event, group_name, event_name, arguments)
 
                     validate_event_description(event["message"], len(arguments))
                     if "description" in event:

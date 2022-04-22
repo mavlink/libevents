@@ -82,6 +82,9 @@ Special groups:
 
   See libs/cpp/parse/health_and_arming_checks.h for an implementation.
 
+  Events with type=`append_health_and_arming_messages` can be used to display a message with all the current arming and health warnings and errors appended to the message.
+  These events need to specify the mode as the first argument.
+
 #### common namespace
 Since events in the common namespace are used by multiple components, they cannot be changed arbitrarily.
 Rules:

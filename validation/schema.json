@@ -128,7 +128,8 @@
                                                             "description": "Optional, specifies a type within an event group (valid values depend on event group).",
                                                             "type": "string",
                                                             "enum": [
-                                                                "summary"
+                                                                "summary",
+                                                                "append_health_and_arming_messages"
                                                             ]
                                                         },
                                                         "instance_arg_index": {
