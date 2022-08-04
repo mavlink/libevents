@@ -683,7 +683,7 @@ unique_ptr<ParsedEvent> Parser::parse(const EventType& event)
     return unique_ptr<ParsedEvent>(new ParsedEvent(event, _config, *iter->second.get()));
 }
 
-set<string> Parser::supportedProtocols(uint8_t component_id)
+set<string> Parser::supportedProtocols(uint8_t component_id) const
 {
     auto iter = _supported_protocols.find(component_id);
     if (iter == _supported_protocols.end())

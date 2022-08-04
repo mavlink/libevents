@@ -155,7 +155,7 @@ public:
 
     bool hasDefinitions() const { return !_events.empty(); }
 
-    std::set<std::string> supportedProtocols(uint8_t component_id);
+    std::set<std::string> supportedProtocols(uint8_t component_id) const;
 
     NavigationModeGroups navigationModeGroups(uint8_t component_id);
 
