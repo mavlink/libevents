@@ -86,6 +86,10 @@ class ParsedEvent:
             return ''
         return self._process_message(self._event['description'])
 
+    def type(self) -> str:
+        """ get event type """
+        return self._event.get('type', '')
+
     def group(self) -> str:
         """ get event group name """
         return self._event_extras['group']
@@ -99,6 +103,10 @@ class ParsedEvent:
     def argument_value(self, idx: int):
         """ get argument value (not enum type) """
         return self._values[idx][0]
+
+    def argument_enum(self, idx: int):
+        """ get argument enum type or None """
+        return self._values[idx][1]
 
     def argument_display_value(self, idx: int):
         """ get argument to display (for enum's it's the enum entry/bits) """

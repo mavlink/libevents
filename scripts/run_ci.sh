@@ -60,6 +60,7 @@ popd
 pushd "$DIR"/../libs/python
 echo "Running Python tests"
 ./tests/parser.py
+./tests/health_and_arming_checks.py
 popd
 
 exit 0
