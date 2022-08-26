@@ -52,6 +52,10 @@
                                             "description": "Set to true if this enum is a bitfield.",
                                             "type": "boolean"
                                         },
+                                        "separator": {
+                                            "description": "Optional separator for multiple entries if is_bitfield is set. The default is '|'",
+                                            "type": "string"
+                                        },
                                         "entries": {
                                             "type": "object",
                                             "description": "The object key is the value.",
@@ -120,6 +124,18 @@
                                                             "description": "Detailed description.",
                                                             "type": "string"
                                                         },
+                                                        "type": {
+                                                            "description": "Optional, specifies a type within an event group (valid values depend on event group).",
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "summary",
+                                                                "append_health_and_arming_messages"
+                                                            ]
+                                                        },
+                                                        "instance_arg_index": {
+                                                            "description": "Optional, specifies an event argument index which defines the instance. The argument must be int. For example a sensor (IMU, battery, ...) event with multiple sensor instances.",
+                                                            "type": "integer"
+                                                        },
                                                         "arguments": {
                                                             "type": "array",
                                                             "items": {
@@ -169,6 +185,30 @@
                                 "pattern": "^(calibration|health_and_arming_check)$",
                                 "comment": "Optional list of supported protocols."
                             }
+                        },
+                        "navigation_mode_groups": {
+                            "type": "object",
+                            "description": "Mapping from navigation modes (custom_mode in mavlink) to groups (i.e. a group contains a set of modes)",
+                            "properties": {
+                                "groups": {
+                                    "type": "object",
+                                    "patternProperties": {
+                                        "^[0-9]+$": {
+                                            "description": "mode index, starting with 0",
+                                            "type": "array",
+                                            "items": {
+                                                "type": "integer",
+                                                "description": "Navigation mode (custom_mode)"
+                                            }
+                                        }
+                                    },
+                                    "additionalProperties": false
+                                }
+                            },
+                            "required": [
+                                "groups"
+                            ],
+                            "additionalProperties": false
                         }
                     },
                     "required": [

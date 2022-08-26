@@ -86,6 +86,10 @@ class ParsedEvent:
             return ''
         return self._process_message(self._event['description'])
 
+    def type(self) -> str:
+        """ get event type """
+        return self._event.get('type', '')
+
     def group(self) -> str:
         """ get event group name """
         return self._event_extras['group']
@@ -100,6 +104,10 @@ class ParsedEvent:
         """ get argument value (not enum type) """
         return self._values[idx][0]
 
+    def argument_enum(self, idx: int):
+        """ get argument enum type or None """
+        return self._values[idx][1]
+
     def argument_display_value(self, idx: int):
         """ get argument to display (for enum's it's the enum entry/bits) """
         value, enum = self._values[idx]
@@ -110,11 +118,12 @@ class ParsedEvent:
             size = _base_types[enum['type']]['size']
             ret_value = ""
             had_bit = False
+            separator = enum.get('separator', '|')
             for i in range(size*8):
                 bit = 1<<i
                 if value & bit:
                     if had_bit:
-                        ret_value += "|"
+                        ret_value += separator
                     found = False
                     for entry_value in enum['entries']:
                         entry = enum['entries'][entry_value]

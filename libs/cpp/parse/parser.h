@@ -33,6 +33,7 @@ struct EnumDefinition {
     BaseType type;
     std::string description;
     bool is_bitfield;
+    std::string entry_separator = "|";  ///< used to separate entries if is_bitfield is set
     std::map<uint64_t, EnumEntryDefinition> entries;
 };
 
@@ -50,6 +51,8 @@ struct EventDefinition {
     uint32_t id;
 
     std::string group_name;
+    std::string type;
+    int instance_arg_index{-1};
 
     std::string name;
     std::string message;
@@ -103,10 +106,12 @@ public:
     std::string description() const;
 
     const std::string& group() const { return _event_definition.group_name; }
+    const std::string& type() const { return _event_definition.type; }
 
     int numArguments() const { return _event_definition.arguments.size(); }
     const EventArgumentDefinition& argument(int index) const { return _event_definition.arguments[index]; }
     Argument argumentValue(int index) const;
+    uint64_t argumentValueInt(int index) const;
 
     const EventType& eventData() const { return _event; }
 
@@ -131,12 +136,12 @@ public:
     Parser() = default;
     ~Parser() = default;
 
-    using translate_func = std::function<std::string(const std::string&)>;
+    struct NavigationModeGroups {
+        std::map<int, std::set<uint32_t>> groups;
+    };
 
-    bool loadDefinitionsFile(
-        const std::string& definitions_file, translate_func translate = [](const std::string& s) { return s; });
-    bool loadDefinitions(
-        const std::string& definitions, translate_func translate = [](const std::string& s) { return s; });
+    bool loadDefinitionsFile(const std::string& definitions_file);
+    bool loadDefinitions(const std::string& definitions);
 
     std::unique_ptr<ParsedEvent> parse(const EventType& event);
 
@@ -150,16 +155,19 @@ public:
 
     bool hasDefinitions() const { return !_events.empty(); }
 
-    std::set<std::string> supportedProtocols(uint8_t component_id);
+    std::set<std::string> supportedProtocols(uint8_t component_id) const;
+
+    NavigationModeGroups navigationModeGroups(uint8_t component_id);
 
 private:
-    bool loadDefinitions(const nlohmann::json& j, translate_func translate);
+    bool loadDefinitions(const nlohmann::json& j);
     EnumDefinition* findEnumDefinition(const std::string& event_namespace, const std::string& type);
 
     EnumDefinitions _enums;
     EventDefinitions _events;
     Config _config;
     std::map<uint32_t, std::set<std::string>> _supported_protocols;
+    std::map<uint32_t, NavigationModeGroups> _navigation_mode_groups;
 };
 
 }  // namespace parser

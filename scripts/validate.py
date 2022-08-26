@@ -182,24 +182,77 @@ def validate_event_description(description: str, num_args: int):
 
 def validate_group(event, group_name, event_name, arguments):
     """ rules for certain groups """
-    if group_name in ('arming_check', 'health') \
-        and (not event_name in ('arming_check_summary', 'health_summary')):
-        assert len(arguments) >= 2, \
-            "missing arguments for health/arming_check event {:}".format(event_name)
-        assert arguments[0] == 'common::navigation_mode_category_t', \
-            "first health/arming_check event {:} argument must " \
-            "be {:}, but is {:}".format(
-                event_name, 'common::navigation_mode_category_t', arguments[0])
 
-        assert arguments[1] == 'uint8_t', \
-            "second health/arming_check event {:} argument must " \
-            "be {:}, but is {:}".format(
-                event_name, 'uint8_t', arguments[1])
+    def validate_arg_name(event, arguments, index, name):
+        assert event['arguments'][index]['name'] == name, \
+            "event '{:}' argument {:} name must " \
+            "be '{:}', but is '{:}'".format(
+            event_name, index, name, event['arguments'][index]['name'])
 
-        assert event['arguments'][1]['name'] == 'health_component_index', \
-            "second health/arming_check event {:} argument name must " \
-            "be {:}, but is {:}".format(
-                event_name, 'health_component_index', event['arguments'][1]['name'])
+    def validate_arg_type(event, arguments, index, type_name):
+        assert arguments[index] == type_name, \
+            "event '{:}' argument {:} type must " \
+            "be '{:}', but is '{:}'".format(
+            event_name, index, type_name, arguments[index])
+
+    if group_name in ('arming_check', 'health'):
+        event_type = event.get('type', '')
+        if event_type == 'summary':
+            assert len(arguments) >= 4, \
+                "missing arguments for health/arming_check summary event {:}".format(event_name)
+
+            validate_arg_name(event, arguments, 0, 'chunk_idx')
+            validate_arg_type(event, arguments, 0, 'uint8_t')
+
+            assert arguments[1] not in common.base_types, \
+                "health/arming_check event {:} argument 1 must " \
+                "be a mode group enum, but is {:}".format(
+                    event_name, arguments[1])
+
+            if group_name == 'arming_check':
+                validate_arg_name(event, arguments, 1, 'error')
+                validate_arg_name(event, arguments, 2, 'warning')
+                validate_arg_type(event, arguments, 2, arguments[1])
+                validate_arg_name(event, arguments, 3, 'can_arm_and_run')
+            else: # 'health'
+                validate_arg_name(event, arguments, 1, 'is_present')
+                validate_arg_name(event, arguments, 2, 'error')
+                validate_arg_type(event, arguments, 2, arguments[1])
+                validate_arg_name(event, arguments, 3, 'warning')
+                validate_arg_type(event, arguments, 3, arguments[1])
+        else:
+            assert len(arguments) >= 2, \
+                "missing arguments for health/arming_check event {:}".format(event_name)
+            assert arguments[0] not in common.base_types, \
+                "first health/arming_check event {:} argument must " \
+                "be a mode group enum, but is {:}".format(
+                    event_name, arguments[0])
+
+            validate_arg_type(event, arguments, 1, 'uint8_t')
+            validate_arg_name(event, arguments, 1, 'health_component_index')
+
+def validate_type(event, group_name, event_name, arguments):
+    """ rules for certain types """
+
+    if not 'type' in event:
+        return
+
+    valid_types = []
+    if group_name == 'default':
+        valid_types = ['append_health_and_arming_messages']
+        if event['type'] == valid_types[0]:
+            # arg0 == mode
+            assert arguments[0] == 'uint32_t', \
+                "event '{:}' argument {:} must " \
+                "be of type '{:}', but is '{:}'".format(
+                event_name, 0, 'uint32_t', arguments[0])
+    elif group_name in ('arming_check', 'health'):
+        valid_types = ['summary']
+
+    assert event['type'] in valid_types, \
+            "event '{:}' type must be one of '{:}', but is '{:}'".format(
+            event_name, valid_types, event['type'])
+
 
 def validate_event_arguments(config, event, events, namespace):
     """ ensure all enums exist
@@ -275,8 +328,9 @@ def extra_validation(events, config):
 
                     arguments = validate_event_arguments(config, event, events, namespace)
 
-                    # rules for certain groups
+                    # rules for certain groups & types
                     validate_group(event, group_name, event_name, arguments)
+                    validate_type(event, group_name, event_name, arguments)
 
                     validate_event_description(event["message"], len(arguments))
                     if "description" in event:

@@ -213,7 +213,7 @@ string ParsedEvent::getFormattedArgument(int argument_idx, int num_decimal_digit
                 uint64_t bit = ((uint64_t)1 << i);
                 if ((value & bit)) {
                     if (had_bit) {
-                        argument_stream << "|";  // delimiter
+                        argument_stream << enum_def->entry_separator;  // delimiter
                     }
                     auto entry_iter = enum_def->entries.find(bit);
                     if (entry_iter == enum_def->entries.end()) {
@@ -395,13 +395,35 @@ ParsedEvent::Argument ParsedEvent::argumentValue(int index) const
     return value;
 }
 
-bool Parser::loadDefinitionsFile(const string& definitions_file, translate_func translate)
+uint64_t ParsedEvent::argumentValueInt(int index) const
+{
+    if (index >= (int)_event_definition.arguments.size()) {
+        return 0;
+    }
+    Argument value = argumentValue(index);
+    switch (_event_definition.arguments[index].type) {
+        case BaseType::uint8_t: return (uint64_t)value.value.val_uint8_t;
+        case BaseType::int8_t: return (uint64_t)value.value.val_int8_t;
+        case BaseType::uint16_t: return (uint64_t)value.value.val_uint16_t;
+        case BaseType::int16_t: return (uint64_t)value.value.val_int16_t;
+        case BaseType::uint32_t: return (uint64_t)value.value.val_uint32_t;
+        case BaseType::int32_t: return (uint64_t)value.value.val_int32_t;
+        case BaseType::uint64_t: return (uint64_t)value.value.val_uint64_t;
+        case BaseType::int64_t: return (uint64_t)value.value.val_int64_t;
+        case BaseType::float_t: return (uint64_t)value.value.val_float;
+        case BaseType::invalid: break;
+    }
+
+    return 0;
+}
+
+bool Parser::loadDefinitionsFile(const string& definitions_file)
 {
     try {
         ifstream stream(definitions_file);
         json j;
         stream >> j;
-        return loadDefinitions(j, translate);
+        return loadDefinitions(j);
 
     } catch (const json::exception& e) {
         UNUSED(e);
@@ -410,10 +432,10 @@ bool Parser::loadDefinitionsFile(const string& definitions_file, translate_func 
     return false;
 }
 
-bool Parser::loadDefinitions(const string& definitions, translate_func translate)
+bool Parser::loadDefinitions(const string& definitions)
 {
     try {
-        return loadDefinitions(json::parse(definitions), translate);
+        return loadDefinitions(json::parse(definitions));
 
     } catch (const json::exception& e) {
         UNUSED(e);
@@ -422,7 +444,7 @@ bool Parser::loadDefinitions(const string& definitions, translate_func translate
     return false;
 }
 
-bool Parser::loadDefinitions(const json& j, translate_func translate)
+bool Parser::loadDefinitions(const json& j)
 {
     // version check
     if (!j.contains("version") || j["version"].get<int>() < 1) {
@@ -459,10 +481,13 @@ bool Parser::loadDefinitions(const json& j, translate_func translate)
                     string enum_type = event_enum.at("type").get<string>();
 
                     if (event_enum.contains("description")) {
-                        enum_def->description = translate(event_enum.at("description").get<string>());
+                        enum_def->description = event_enum.at("description").get<string>();
                     }
                     if (event_enum.contains("is_bitfield")) {
                         enum_def->is_bitfield = event_enum.at("is_bitfield").get<bool>();
+                    }
+                    if (event_enum.contains("separator")) {
+                        enum_def->entry_separator = event_enum.at("separator").get<string>();
                     }
 
                     LIBEVENTS_PARSER_DEBUG_PRINTF("Enum: %s, type=%s\n", enum_def->name.c_str(), enum_type.c_str());
@@ -481,7 +506,7 @@ bool Parser::loadDefinitions(const json& j, translate_func translate)
                             uint64_t value = std::stoull(entry_iter.key());
                             EnumEntryDefinition entry_def;
                             entry_def.name = entry.at("name").get<string>();
-                            entry_def.description = translate(entry.at("description").get<string>());
+                            entry_def.description = entry.at("description").get<string>();
                             enum_def->entries.emplace(std::make_pair(value, entry_def));
                             LIBEVENTS_PARSER_DEBUG_PRINTF("  value: %" PRIu64 ", name=%s\n", value,
                                                           entry_def.name.c_str());
@@ -522,11 +547,18 @@ bool Parser::loadDefinitions(const json& j, translate_func translate)
                         event_def->event_namespace = event_namespace;
                         event_def->group_name = event_group_name;
 
+                        if (event.contains("type")) {
+                            event_def->type = event.at("type").get<string>();
+                        }
+                        if (event.contains("instance_arg_index")) {
+                            event_def->instance_arg_index = event.at("instance_arg_index").get<int>();
+                        }
+
                         event_def->name = event.at("name").get<string>();
-                        event_def->message = translate(event.at("message").get<string>());
+                        event_def->message = event.at("message").get<string>();
 
                         if (event.contains("description")) {
-                            event_def->description = translate(event.at("description").get<string>());
+                            event_def->description = event.at("description").get<string>();
                         }
 
                         uint32_t sub_id = std::stoul(event_iter.key()) & 0xffffff;
@@ -543,7 +575,7 @@ bool Parser::loadDefinitions(const json& j, translate_func translate)
                                 arg_def.name = arg.at("name").get<string>();
 
                                 if (arg.contains("description")) {
-                                    arg_def.description = translate(arg.at("description").get<string>());
+                                    arg_def.description = arg.at("description").get<string>();
                                 }
 
                                 string type = arg.at("type").get<string>();
@@ -591,6 +623,24 @@ bool Parser::loadDefinitions(const json& j, translate_func translate)
                     supported_components.insert(proto);
                 }
             }
+
+            if (component.contains("navigation_mode_groups")) {
+                auto navigation_mode_groups_js = component["navigation_mode_groups"];
+                if (_navigation_mode_groups.find(component_id) == _navigation_mode_groups.end()) {
+                    _navigation_mode_groups[component_id] = {};
+                }
+                NavigationModeGroups& navigation_mode_groups = _navigation_mode_groups[component_id];
+                for (json::const_iterator group_iter = navigation_mode_groups_js["groups"].begin();
+                     group_iter != navigation_mode_groups_js["groups"].end(); ++group_iter) {
+                    const auto& entry = group_iter.value();
+                    std::set<uint32_t> modes;
+                    int value = std::stoull(group_iter.key());
+                    for (json::const_iterator mode_iter = entry.begin(); mode_iter != entry.end(); ++mode_iter) {
+                        modes.insert(mode_iter.value().get<uint32_t>());
+                    }
+                    navigation_mode_groups.groups.emplace(value, std::move(modes));
+                }
+            }
         }
 
     } catch (const json::exception& e) {
@@ -633,10 +683,18 @@ unique_ptr<ParsedEvent> Parser::parse(const EventType& event)
     return unique_ptr<ParsedEvent>(new ParsedEvent(event, _config, *iter->second.get()));
 }
 
-set<string> Parser::supportedProtocols(uint8_t component_id)
+set<string> Parser::supportedProtocols(uint8_t component_id) const
 {
     auto iter = _supported_protocols.find(component_id);
     if (iter == _supported_protocols.end())
+        return {};
+    return iter->second;
+}
+
+Parser::NavigationModeGroups Parser::navigationModeGroups(uint8_t component_id)
+{
+    auto iter = _navigation_mode_groups.find(component_id);
+    if (iter == _navigation_mode_groups.end())
         return {};
     return iter->second;
 }

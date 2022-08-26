@@ -72,7 +72,8 @@ def main():
                                 event = group["events"][event_sub_id]
                                 assert not event_sub_id in matching_group["events"], \
                                     "ID collision: {:}".format(event_sub_id)
-                                assert not any(event["name"] == e["name"] \
+                                assert not any(event["name"] == \
+                                    matching_group["events"][e]["name"] \
                                     for e in matching_group["events"]), \
                                     "event name collision: {:}".format(event["name"])
                                 matching_group["events"][event_sub_id] = event
@@ -83,6 +84,11 @@ def main():
                         matching_comp["supported_protocols"] = \
                             list(set(matching_comp.get("supported_protocols", []) +
                             component["supported_protocols"]))
+
+                    if "navigation_mode_groups" in component:
+                        assert "navigation_mode_groups" not in matching_comp
+                        matching_comp["navigation_mode_groups"] = \
+                            component["navigation_mode_groups"]
                 else:
                     events["components"][comp_id] = component
 
