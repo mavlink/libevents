@@ -43,14 +43,15 @@ bool HealthAndArmingChecks::handleEvent(const events::parser::ParsedEvent& event
     switch (type) {
         case Type::ArmingCheckSummary:
             reset();
-            if (event.numArguments() >= 4 && event.argument(1).isEnum() && event.argument(3).isEnum()) {
+            if (event.numArguments() >= 5 && event.argument(1).isEnum() && event.argument(3).isEnum()) {
                 _current_chunk = event.argumentValueInt(0);
                 _chunks[_current_chunk] = {};
                 parser::EnumDefinition* health_enum = event.argument(1).enum_def;
                 uint64_t error = event.argumentValueInt(1);
                 uint64_t warning = event.argumentValueInt(2);
                 parser::EnumDefinition* mode_group_enum = event.argument(3).enum_def;
-                uint64_t can_arm_and_run = event.argumentValueInt(3);
+                uint64_t can_arm = event.argumentValueInt(3);
+                uint64_t can_run = event.argumentValueInt(4);
 
                 Results& current_results = _chunks[_current_chunk];
                 for (auto entry_iter : mode_group_enum->entries) {
@@ -61,7 +62,8 @@ bool HealthAndArmingChecks::handleEvent(const events::parser::ParsedEvent& event
                     }
                     ModeGroup mode_group{};
                     mode_group.name = entry_iter.second.name;
-                    mode_group.can_arm_and_run = can_arm_and_run & entry_iter.first;
+                    mode_group.can_arm = can_arm & entry_iter.first;
+                    mode_group.can_run = can_run & entry_iter.first;
                     current_results._mode_groups.groups[index] = mode_group;
                 }
                 for (auto entry_iter : health_enum->entries) {
@@ -128,7 +130,8 @@ void HealthAndArmingChecks::updateResultsFromChunks()
             for (size_t mode_group_idx = 0; mode_group_idx < chunk._mode_groups.groups.size(); ++mode_group_idx) {
                 const ModeGroup& mode_group = chunk._mode_groups.groups[mode_group_idx];
                 // combine with AND
-                _results._mode_groups.groups[mode_group_idx].can_arm_and_run &= mode_group.can_arm_and_run;
+                _results._mode_groups.groups[mode_group_idx].can_arm &= mode_group.can_arm;
+                _results._mode_groups.groups[mode_group_idx].can_run &= mode_group.can_run;
             }
         } else {
             LIBEVENTS_DEBUG_PRINTF("Unexpected different number of modes. Expected: %i, got %i",
@@ -176,12 +179,20 @@ void HealthAndArmingChecks::reset()
     _expectedEvent = Type::ArmingCheckSummary;
 }
 
-bool HealthAndArmingChecks::Results::canArmAndRun(int mode_group_index) const
+bool HealthAndArmingChecks::Results::canArm(int mode_group_index) const
 {
     if (mode_group_index >= (int)_mode_groups.groups.size()) {
         return false;
     }
-    return _mode_groups.groups[mode_group_index].can_arm_and_run;
+    return _mode_groups.groups[mode_group_index].can_arm;
+}
+
+bool HealthAndArmingChecks::Results::canRun(int mode_group_index) const
+{
+    if (mode_group_index >= (int)_mode_groups.groups.size()) {
+        return false;
+    }
+    return _mode_groups.groups[mode_group_index].can_run;
 }
 
 std::vector<HealthAndArmingChecks::Check> HealthAndArmingChecks::Results::checks(int mode_group_index) const

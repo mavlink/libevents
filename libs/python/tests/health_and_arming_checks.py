@@ -39,9 +39,10 @@ print('No Events')
 chunk_id = 0
 error = 0
 warning = gps_mask
-can_arm_and_run = pos_ctrl_mask | rtl_mask
+can_arm = pos_ctrl_mask | rtl_mask
+can_run = 0
 args = create_args([(chunk_id, 'int8_t'), (error, 'uint32_t'), (warning, 'uint32_t'),
-                    (can_arm_and_run, 'uint32_t')])
+                    (can_arm, 'uint32_t'), (can_run, 'uint32_t')])
 event_id = 11047904 | (0 << 24) # arming check summary
 parsed_event = p.parse(event_id, args)
 assert parsed_event
@@ -72,10 +73,10 @@ assert health_and_arming_checks.results.health_components['gps'].health.is_prese
 assert not health_and_arming_checks.results.health_components['absolute_pressure'].health.error
 assert health_and_arming_checks.results.health_components['absolute_pressure'].health.warning
 assert health_and_arming_checks.results.health_components['absolute_pressure'].health.is_present
-assert not health_and_arming_checks.results.can_arm_and_run(int(math.log2(manual_mask)))
-assert health_and_arming_checks.results.can_arm_and_run(int(math.log2(pos_ctrl_mask)))
-assert not health_and_arming_checks.results.can_arm_and_run(int(math.log2(mission_mask)))
-assert health_and_arming_checks.results.can_arm_and_run(int(math.log2(rtl_mask)))
+assert not health_and_arming_checks.results.can_arm(int(math.log2(manual_mask)))
+assert health_and_arming_checks.results.can_arm(int(math.log2(pos_ctrl_mask)))
+assert not health_and_arming_checks.results.can_arm(int(math.log2(mission_mask)))
+assert health_and_arming_checks.results.can_arm(int(math.log2(rtl_mask)))
 print("")
 
 
@@ -175,9 +176,10 @@ print("Adding chunk")
 chunk_id = 1
 error = 0
 warning = differential_pressure_mask
-can_arm_and_run = pos_ctrl_mask
+can_arm = pos_ctrl_mask
+can_run = pos_ctrl_mask
 args = create_args([(chunk_id, 'int8_t'), (error, 'uint32_t'), (warning, 'uint32_t'),
-                    (can_arm_and_run, 'uint32_t')])
+                    (can_arm, 'uint32_t'), (can_run, 'uint32_t')])
 event_id = 11047904 | (0 << 24) # arming check summary
 parsed_event = p.parse(event_id, args)
 assert parsed_event
@@ -215,10 +217,10 @@ assert health_and_arming_checks.results.health_components['absolute_pressure'].h
 assert health_and_arming_checks.results.health_components['absolute_pressure'].health.is_present
 assert health_and_arming_checks.results.health_components['differential_pressure']\
     .arming_check.warning
-assert not health_and_arming_checks.results.can_arm_and_run(int(math.log2(manual_mask)))
-assert health_and_arming_checks.results.can_arm_and_run(int(math.log2(pos_ctrl_mask)))
-assert not health_and_arming_checks.results.can_arm_and_run(int(math.log2(mission_mask)))
-assert not health_and_arming_checks.results.can_arm_and_run(int(math.log2(rtl_mask)))
+assert not health_and_arming_checks.results.can_arm(int(math.log2(manual_mask)))
+assert health_and_arming_checks.results.can_arm(int(math.log2(pos_ctrl_mask)))
+assert not health_and_arming_checks.results.can_arm(int(math.log2(mission_mask)))
+assert not health_and_arming_checks.results.can_arm(int(math.log2(rtl_mask)))
 
 assert len(removed_events) == 0
 assert len(added_events) == 1

@@ -37,7 +37,8 @@ class HealthAndArmingChecks:
         """ Flags for a mode group """
         def __init__(self):
             self.name: str = ''
-            self.can_arm_and_run: bool = False
+            self.can_arm: bool = False
+            self.can_run: bool = False
 
     class Check:
         """ single check (associated with an event) """
@@ -56,11 +57,17 @@ class HealthAndArmingChecks:
             self._health_components: dict[str, HealthAndArmingChecks.HealthComponent] = {}
             self._checks: list[HealthAndArmingChecks.Check] = []
 
-        def can_arm_and_run(self, mode_group_index: int):
+        def can_arm(self, mode_group_index: int):
             """ Whether arming is possible for a mode group """
             if mode_group_index >= len(self._mode_groups):
                 return False
-            return self._mode_groups[mode_group_index].can_arm_and_run
+            return self._mode_groups[mode_group_index].can_arm
+
+        def can_run(self, mode_group_index: int):
+            """ Whether switching to a mode is possible for a mode group (relevant while armed) """
+            if mode_group_index >= len(self._mode_groups):
+                return False
+            return self._mode_groups[mode_group_index].can_run
 
         @property
         def checks(self):
@@ -127,7 +134,7 @@ class HealthAndArmingChecks:
 
         if event_type == 'arming_check':
             self._reset()
-            if event.num_arguments() >= 4 and event.argument_enum(1) is not None and \
+            if event.num_arguments() >= 5 and event.argument_enum(1) is not None and \
                     event.argument_enum(3) is not None:
                 self._current_chunk = event.argument_value(0)
                 self._chunks[self._current_chunk] = self.Results()
@@ -135,7 +142,8 @@ class HealthAndArmingChecks:
                 error = event.argument_value(1)
                 warning = event.argument_value(2)
                 mode_group_enum = event.argument_enum(3)
-                can_arm_and_run = event.argument_value(3)
+                can_arm = event.argument_value(3)
+                can_run = event.argument_value(4)
 
                 current_results = self._chunks[self._current_chunk]
                 for entry_key in mode_group_enum['entries']:
@@ -147,7 +155,8 @@ class HealthAndArmingChecks:
                         current_results._mode_groups.append(HealthAndArmingChecks.ModeGroup())
                     mode_group = HealthAndArmingChecks.ModeGroup()
                     mode_group.name = entry['name']
-                    mode_group.can_arm_and_run = (can_arm_and_run & entry_key_int) != 0
+                    mode_group.can_arm = (can_arm & entry_key_int) != 0
+                    mode_group.can_run = (can_run & entry_key_int) != 0
                     current_results._mode_groups[index] = mode_group
 
                 for entry_key in health_enum['entries']:
@@ -205,8 +214,10 @@ class HealthAndArmingChecks:
             elif len(self._results._mode_groups) == len(chunk._mode_groups):
                 for mode_group_idx, mode_group in enumerate(chunk._mode_groups):
                     # combine with AND
-                    self._results._mode_groups[mode_group_idx].can_arm_and_run &= \
-                        mode_group.can_arm_and_run
+                    self._results._mode_groups[mode_group_idx].can_arm &= \
+                        mode_group.can_arm
+                    self._results._mode_groups[mode_group_idx].can_run &= \
+                        mode_group.can_run
             else:
                 self._debug_print('unexpected different number of modes. Expected: {:}, got {:}'
                                   .format(len(self._results._mode_groups), len(chunk._mode_groups)))

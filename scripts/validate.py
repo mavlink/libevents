@@ -213,7 +213,8 @@ def validate_group(event, group_name, event_name, arguments):
                 validate_arg_name(event, arguments, 1, 'error')
                 validate_arg_name(event, arguments, 2, 'warning')
                 validate_arg_type(event, arguments, 2, arguments[1])
-                validate_arg_name(event, arguments, 3, 'can_arm_and_run')
+                validate_arg_name(event, arguments, 3, 'can_arm')
+                validate_arg_name(event, arguments, 4, 'can_run')
             else: # 'health'
                 validate_arg_name(event, arguments, 1, 'is_present')
                 validate_arg_name(event, arguments, 2, 'error')

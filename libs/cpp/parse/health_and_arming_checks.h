@@ -37,7 +37,8 @@ public:
     };
     struct ModeGroup {
         std::string name;
-        bool can_arm_and_run{false};
+        bool can_arm{false};  ///< whether or not arming is possible for this mode group
+        bool can_run{false};  ///< whether or not it's possible to switch to these modes (only relevant while armed)
     };
     struct ModeGroups {
         std::vector<ModeGroup> groups;
@@ -58,7 +59,8 @@ public:
     class Results
     {
     public:
-        bool canArmAndRun(int mode_group_index) const;
+        bool canArm(int mode_group_index) const;
+        bool canRun(int mode_group_index) const;
 
         const std::vector<Check>& checks() const { return _checks; }
         std::vector<Check> checks(int mode_group_index) const;

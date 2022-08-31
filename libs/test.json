@@ -166,7 +166,11 @@
                                 },
                                 {
                                     "type": "test2::navigation_mode_group_t",
-                                    "name": "can_arm_and_run"
+                                    "name": "can_arm"
+                                },
+                                {
+                                    "type": "test2::navigation_mode_group_t",
+                                    "name": "can_run"
                                 }
                             ]
                         },
