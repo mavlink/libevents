@@ -93,7 +93,7 @@ def main():
                     events["components"][comp_id] = component
 
     with open(output_file, 'w', encoding='utf-8') as f:
-        f.write(json.dumps(events, indent=2))
+        f.write(json.dumps(events, indent=2, sort_keys=True))
 
 if __name__ == "__main__":
     main()
