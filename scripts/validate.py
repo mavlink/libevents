@@ -101,14 +101,16 @@ def validate_event_description(description: str, num_args: int):
         backslash_idx = check_str.find('\\')
 
     i = 0
+    url_allowed = False
     while i < len(check_str):
 
         # enforce using tags for url's
-        if check_str[i:i+7] == 'http://' or check_str[i:i+8] == 'https://':
+        if not url_allowed and (check_str[i:i+7] == 'http://' or check_str[i:i+8] == 'https://'):
             raise Exception("freestanding url found in:\n\n{:}\n\n" \
                     "Use a tag in one of these formats:\n" \
                     "- <a>LINK</a>\n" \
                     "- <a href=\"LINK\">DESCRIPTION</a>".format(description))
+        url_allowed = False
 
         if check_str[i] == '<':
             # extract tag with 1 optional argument. Be strict with spacing to
@@ -140,6 +142,8 @@ def validate_event_description(description: str, num_args: int):
                     raise Exception("Unknown profile '{:}={:}' in:\n\n{:}\n\n" \
                             "Known profiles: {:}".format(
                                 m.group(2), profile, description, known_profiles))
+            elif tag_name == 'a':
+                url_allowed = True
 
             content_start_idx = m.start(4)
             end_tag_idx = check_str.find('</'+tag_name+'>', i+content_start_idx)
