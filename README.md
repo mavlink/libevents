@@ -48,7 +48,7 @@ Supported format and parsing:
       - m/s: speed in m/s
       - C: temperature in degrees celcius
       - These are used to be able to switch the display unit (e.g. metric vs
-        imperical)
+        imperial)
 
 #### Log levels
 Events have 2 log levels:
