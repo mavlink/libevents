@@ -16,9 +16,10 @@ Initial design doc: https://docs.google.com/document/d/18qdDgfML97lItom09MJhngYn
 
 ### Event definitions
 Event definitions are separated by namespaces.
-Each namespace has a name and an 8 bit component ID (typically matching the MAVLink component ID).
+Each namespace has a name and an 8 bit component ID (typically matching the MAVLink component ID. For multi-instance components, it should be the first one, e.g. GIMBAL1).
 Within a namespace, each event has a unique name and sub ID (24 bits). The event ID is the combined component ID with sub ID.
 So events can be uniquely identified for the whole system by ID or `<namespace>::<name>`.
+This is generally not required, as metadata is queried independently per MAVLink component. It is only relevant when combining all events from a system without further component identification, e.g. for logging.
 
 Each event can have a set of arguments, using either basic types or enums.
 
