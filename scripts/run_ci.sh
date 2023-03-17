@@ -35,6 +35,7 @@ for json in ${json_files[@]}; do
 	./scripts/validate.py $json
 done
 check_json_format validation/schema.json
+check_json_format validation/schema.translation.json
 
 ./scripts/generate_all.sh --check || (echo -e "Run\n./scripts/generate_all.sh\nand commit the changes\n" && exit -1)
 

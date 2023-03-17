@@ -69,7 +69,7 @@ def main():
     with open(input_file, 'r', encoding='utf-8') as json_file:
         events = json.load(json_file)
         assert "version" in events
-        assert events["version"] == 1
+        assert events["version"] == 1 or events["version"] == 2
 
         add_info(events, constants["base_types"])
 

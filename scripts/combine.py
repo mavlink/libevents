@@ -32,11 +32,15 @@ def main():
         with open(input_file, 'r', encoding='utf-8') as json_file:
             new_events = json.load(json_file)
             assert "version" in new_events
-            assert new_events["version"] == 1
+            assert new_events["version"] == 1 or new_events["version"] == 2
 
             if not events:
                 events = new_events
                 continue
+
+            # translation: just need to make sure we pick one
+            if "translation" in new_events and "translation" not in events:
+                events["translation"] = new_events["translation"]
 
             # merge new_events into events
             for comp_id in new_events["components"]:

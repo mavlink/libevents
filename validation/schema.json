@@ -7,8 +7,12 @@
         "version": {
             "description": "Version number for the format of this file. Future versions need to be backwards compatible (i.e. existing parsers can parse newer versions).",
             "type": "integer",
-            "minimum": 1,
-            "maximum": 1
+            "minimum": 2,
+            "maximum": 2
+        },
+        "translation": {
+            "type": "object",
+            "description": "This needs to match exactly with the content of schema.translation.json"
         },
         "components": {
             "type": "object",
