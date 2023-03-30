@@ -106,7 +106,7 @@ def validate_event_description(description: str, num_args: int):
 
         # enforce using tags for url's
         if not url_allowed and (check_str[i:i+7] == 'http://' or check_str[i:i+8] == 'https://'):
-            raise Exception("freestanding url found in:\n\n{:}\n\n" \
+            raise ValueError("freestanding url found in:\n\n{:}\n\n" \
                     "Use a tag in one of these formats:\n" \
                     "- <a>LINK</a>\n" \
                     "- <a href=\"LINK\">DESCRIPTION</a>".format(description))
@@ -117,7 +117,7 @@ def validate_event_description(description: str, num_args: int):
             # simplify library implementations
             m = re.match(r"^<([a-z]+)(?: ([a-z]+)=\"([^\"]*)\")?>(.)", check_str[i:], re.DOTALL)
             if not m:
-                raise Exception("Invalid tag format in:\n\n{:}\n\n" \
+                raise ValueError("Invalid tag format in:\n\n{:}\n\n" \
                         "General form: <TAG[ ARG=\"VAL\"]>CONTENT</TAG>\n"
                         "Use \\< to escape a single '<'".format(description))
             #print(m.groups())
@@ -127,19 +127,19 @@ def validate_event_description(description: str, num_args: int):
             # "unknown" is for the tests
             known_tags = ["a", "param", "profile", "unknown"]
             if not tag_name in known_tags:
-                raise Exception("Unknown tag '<{:}>' in:\n\n{:}\n\n" \
+                raise ValueError("Unknown tag '<{:}>' in:\n\n{:}\n\n" \
                         "Known tags: {:}".format(tag_name, description, known_tags))
 
             if tag_name == "profile":
                 known_profiles = ["dev", "normal"]
                 if m.group(3) is None:
-                    raise Exception("Missing profile name in:\n\n{:}\n\n" \
+                    raise ValueError("Missing profile name in:\n\n{:}\n\n" \
                             "".format(description))
                 profile = m.group(3)
                 if profile.startswith('!'):
                     profile = profile[1:]
                 if m.group(2) != "name" or not profile in known_profiles:
-                    raise Exception("Unknown profile '{:}={:}' in:\n\n{:}\n\n" \
+                    raise ValueError("Unknown profile '{:}={:}' in:\n\n{:}\n\n" \
                             "Known profiles: {:}".format(
                                 m.group(2), profile, description, known_profiles))
             elif tag_name == 'a':
@@ -148,13 +148,13 @@ def validate_event_description(description: str, num_args: int):
             content_start_idx = m.start(4)
             end_tag_idx = check_str.find('</'+tag_name+'>', i+content_start_idx)
             if end_tag_idx == -1:
-                raise Exception("Ending tag for '<{:}>' not found in:\n\n{:}\n\n" \
+                raise ValueError("Ending tag for '<{:}>' not found in:\n\n{:}\n\n" \
                         "".format(tag_name, description))
             tag_content = check_str[i+content_start_idx:end_tag_idx]
 
             # check for nested tags
             if '<'+tag_name in tag_content:
-                raise Exception("Unsupported nested tag found for '<{:}>' in:\n\n{:}\n\n" \
+                raise ValueError("Unsupported nested tag found for '<{:}>' in:\n\n{:}\n\n" \
                         "".format(tag_name, description))
 
             # continue with checking the tag content
@@ -163,23 +163,23 @@ def validate_event_description(description: str, num_args: int):
         elif check_str[i] == '{':
             arg_end_idx = check_str.find('}', i)
             if arg_end_idx == -1:
-                raise Exception("Invalid argument, no '}}' found in:\n\n{:}\n\n" \
+                raise ValueError("Invalid argument, no '}}' found in:\n\n{:}\n\n" \
                         "Use escaping for a literal output: '\\{{'".format(description))
             arg = check_str[i+1:arg_end_idx]
             m = re.match(r"^(\d+)(?::(?:\.(\d+))?)?(m|m_v|m/s|m\^2|C)?$", arg)
             if not m:
-                raise Exception("Invalid argument ('{{{:}}}') in:\n\n{:}\n\n" \
+                raise ValueError("Invalid argument ('{{{:}}}') in:\n\n{:}\n\n" \
                         "General form: {{ARG_IDX[:.NUM_DECIMAL_DIGITS][UNIT]}}" \
                         .format(arg, description))
             #print(m.groups())
             arg_idx = int(m.group(1)) - 1
             if arg_idx < 0 or arg_idx >= num_args:
-                raise Exception("Invalid argument index ({:}) in:\n\n{:}\n\n" \
+                raise ValueError("Invalid argument index ({:}) in:\n\n{:}\n\n" \
                         "Valid range: [1..{:}]".format(arg_idx+1, description, num_args))
 
             i += len(arg) + 2
         elif check_str[i] in ('}', '>'):
-            raise Exception("Found stray '{:}' in:\n\n{:}\n\n" \
+            raise ValueError("Found stray '{:}' in:\n\n{:}\n\n" \
                     "You might want to escape it with '\\'".format(check_str[i], description))
         else:
             i += 1
@@ -283,7 +283,7 @@ def validate_event_arguments(config, event, events, namespace):
         arguments_size += common.base_types[base_type]['size']
 
     if arguments_size > int(config['max_arguments_size']):
-        raise Exception("Argument size exceeded for event {:} ({:} > {:})" \
+        raise ValueError("Argument size exceeded for event {:} ({:} > {:})" \
                 .format(namespace+'::'+event["name"], arguments_size, config['max_arguments_size']))
     return arguments
 
@@ -306,7 +306,7 @@ def extra_validation(events, config):
         namespace = comp["namespace"]
 
         if namespace in all_namespaces:
-            raise Exception("Duplicate namespace: {:}".format(namespace))
+            raise ValueError("Duplicate namespace: {:}".format(namespace))
         all_namespaces.add(namespace)
 
 
@@ -324,11 +324,11 @@ def extra_validation(events, config):
                     event_name = event["name"]
 
                     if event_sub_id in all_event_id:
-                        raise Exception("Duplicate event id: {:} ({:})".format(
+                        raise ValueError("Duplicate event id: {:} ({:})".format(
                             event_sub_id, event['name']))
                     all_event_id.add(event_sub_id)
                     if event_name in all_event_names:
-                        raise Exception("Duplicate event name: {:}".format(event_name))
+                        raise ValueError("Duplicate event name: {:}".format(event_name))
                     all_event_names.add(event_name)
 
                     arguments = validate_event_arguments(config, event, events, namespace)

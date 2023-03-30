@@ -34,7 +34,7 @@ def base_type_from_enum(events, default_namespace: str, enum: str):
             e = comp["enums"][enum_name]
             if enum_name == enum_type:
                 return (e["type"], namespace+'::'+enum_type)
-    raise Exception("enum '{:}' definition not found.\nSupported base types: {}" \
+    raise ValueError("enum '{:}' definition not found.\nSupported base types: {}" \
                     .format(enum, list(base_types.keys())))
 
 def read_config():
