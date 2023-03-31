@@ -12,7 +12,7 @@ This project contains the events interface, which includes the following:
   This also includes log processing.
 
 ### Design
-Initial design doc: https://docs.google.com/document/d/18qdDgfML97lItom09MJhngYnFzAm1zFdmlCKG7TaBpg/edit#heading=h.l8v2vka1vs88
+Initial design doc: https://docs.google.com/document/d/1VLdnvjG6r6Cw-_FSo9lcG-Nlk7eGA7DaEHhe-3bP4-Q
 
 ### Event definitions
 Event definitions are separated by namespaces.
