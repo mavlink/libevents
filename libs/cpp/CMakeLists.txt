@@ -1,15 +1,26 @@
 cmake_minimum_required(VERSION 2.8.12)
 
+if (POLICY CMP0048)
+	cmake_policy(SET CMP0048 NEW)
+endif (POLICY CMP0048)
 project(libevents C CXX)
 
 set(LIBEVENTS_CPP_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 set(LIBEVENTS_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../..")
 
+# Determine if the library is built as a subproject (using add_subdirectory) or if it is the main project.
+set(MAIN_PROJECT OFF)
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+	set(MAIN_PROJECT ON)
+endif()
+
 include_directories(include)
 
 add_subdirectory(parse)
 add_subdirectory(protocol EXCLUDE_FROM_ALL)
-add_subdirectory(tests)
+if(MAIN_PROJECT)
+	add_subdirectory(tests)
+endif()
 
 
 find_program(CLANG_FORMAT_EXECUTABLE

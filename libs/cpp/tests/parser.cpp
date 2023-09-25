@@ -2,12 +2,7 @@
 #include "parse/parser.h"
 
 #include <events_generated.h>
-
-// always keep assertions. Could use gtest as well...
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
-#include <assert.h>
+#include <gtest/gtest.h>
 
 #include <cstdint>
 #include <cstdio>
@@ -15,11 +10,22 @@
 #include <iomanip>
 #include <sstream>
 
-int main(int argc, char** argv)
+std::string getTestJsonFile()
+{
+    // Get directory of this source file
+    const std::string this_file = __FILE__;
+    const size_t last_slash_idx = this_file.rfind('/');
+    assert(std::string::npos != last_slash_idx);
+    const std::string this_directory = this_file.substr(0, last_slash_idx);
+
+    return this_directory + "/../../test.json";
+}
+
+TEST(Parser, BasicAssertions)
 {
     events::parser::Parser p;
-    bool ret = p.loadDefinitionsFile("../../test.json");
-    assert(ret);
+    bool ret = p.loadDefinitionsFile(getTestJsonFile());
+    ASSERT_TRUE(ret);
 
     p.setProfile("dev");
 
@@ -32,16 +38,16 @@ int main(int argc, char** argv)
         events::EventType event = events::test::create_test1(events::Log::Info);
 
         std::unique_ptr<events::parser::ParsedEvent> parsed_event = p.parse(event);
-        assert(parsed_event);
-        assert(parsed_event->id() == event.id);
-        assert(event.id == 2306236 | (1 << 24));
-        assert(parsed_event->name() == "test1");
-        assert(parsed_event->group() == "default");
-        assert(parsed_event->numArguments() == 0);
+        ASSERT_TRUE(parsed_event);
+        EXPECT_EQ(parsed_event->id(), event.id);
+        EXPECT_EQ(event.id, (2306236 | (1 << 24)));
+        EXPECT_EQ(parsed_event->name(), "test1");
+        EXPECT_EQ(parsed_event->group(), "default");
+        ASSERT_EQ(parsed_event->numArguments(), 0);
         printf("message=%s\n", parsed_event->message().c_str());
         printf("description=%s\n", parsed_event->description().c_str());
-        assert(parsed_event->message() == "Test");
-        assert(parsed_event->description() == "");
+        EXPECT_EQ(parsed_event->message(), "Test");
+        EXPECT_EQ(parsed_event->description(), "");
     }
 
     {
@@ -53,28 +59,28 @@ int main(int argc, char** argv)
         events::EventType event = events::test::create_test2(events::Log::Info, a, b, c, d, e);
 
         std::unique_ptr<events::parser::ParsedEvent> parsed_event = p.parse(event);
-        assert(parsed_event);
-        assert(parsed_event->id() == event.id);
-        assert(event.id == 2307445 | (1 << 24));
-        assert(parsed_event->name() == "test2");
-        assert(parsed_event->group() == "default");
+        ASSERT_TRUE(parsed_event);
+        EXPECT_EQ(parsed_event->id(), event.id);
+        EXPECT_EQ(event.id, (2307445 | (1 << 24)));
+        EXPECT_EQ(parsed_event->name(), "test2");
+        EXPECT_EQ(parsed_event->group(), "default");
 
-        assert(parsed_event->numArguments() == 5);
-        assert(parsed_event->argument(0).type == events::parser::BaseType::int8_t);
-        assert(parsed_event->argumentValue(0).value.val_int8_t == a);
-        assert(parsed_event->argument(1).type == events::parser::BaseType::int16_t);
-        assert(parsed_event->argumentValue(1).value.val_int16_t == b);
-        assert(parsed_event->argument(2).type == events::parser::BaseType::int32_t);
-        assert(parsed_event->argumentValue(2).value.val_int32_t == c);
-        assert(parsed_event->argument(3).type == events::parser::BaseType::int64_t);
-        assert(parsed_event->argumentValue(3).value.val_int64_t == d);
-        assert(parsed_event->argument(4).type == events::parser::BaseType::float_t);
-        assert(parsed_event->argumentValue(4).value.val_float == e);
+        ASSERT_EQ(parsed_event->numArguments(), 5);
+        EXPECT_EQ(parsed_event->argument(0).type, events::parser::BaseType::int8_t);
+        EXPECT_EQ(parsed_event->argumentValue(0).value.val_int8_t, a);
+        EXPECT_EQ(parsed_event->argument(1).type, events::parser::BaseType::int16_t);
+        EXPECT_EQ(parsed_event->argumentValue(1).value.val_int16_t, b);
+        EXPECT_EQ(parsed_event->argument(2).type, events::parser::BaseType::int32_t);
+        EXPECT_EQ(parsed_event->argumentValue(2).value.val_int32_t, c);
+        EXPECT_EQ(parsed_event->argument(3).type, events::parser::BaseType::int64_t);
+        EXPECT_EQ(parsed_event->argumentValue(3).value.val_int64_t, d);
+        EXPECT_EQ(parsed_event->argument(4).type, events::parser::BaseType::float_t);
+        EXPECT_EQ(parsed_event->argumentValue(4).value.val_float, e);
 
         printf("message=%s\n", parsed_event->message().c_str());
         printf("description=%s\n", parsed_event->description().c_str());
-        assert(parsed_event->message() == "Arguments: -3 -9238 832223 -9277377287318721 3423423.25");
-        assert(parsed_event->description() == "test\n<{}PARAM#www.test.com<link=www.test.com>#");
+        EXPECT_EQ(parsed_event->message(), "Arguments: -3 -9238 832223 -9277377287318721 3423423.25");
+        EXPECT_EQ(parsed_event->description(), "test\n<{}PARAM#www.test.com<link=www.test.com>#");
 
         int8_t a2;
         int16_t b2;
@@ -82,7 +88,7 @@ int main(int argc, char** argv)
         int64_t d2;
         float e2;
         events::test::decode_test2(event, a2, b2, c2, d2, e2);
-        assert(a == a2 && b == b2 && c == c2 && d == d2 && e == e2);
+        EXPECT_TRUE(a == a2 && b == b2 && c == c2 && d == d2 && e == e2);
     }
 
     {
@@ -94,28 +100,28 @@ int main(int argc, char** argv)
         events::EventType event = events::test::create_test3(events::Log::Info, a, b, c, d, e);
 
         std::unique_ptr<events::parser::ParsedEvent> parsed_event = p.parse(event);
-        assert(parsed_event);
-        assert(parsed_event->id() == event.id);
-        assert(event.id == 2307042 | (1 << 24));
-        assert(parsed_event->name() == "test3");
-        assert(parsed_event->group() == "default");
+        ASSERT_TRUE(parsed_event);
+        EXPECT_EQ(parsed_event->id(), event.id);
+        EXPECT_EQ(event.id, (2307042 | (1 << 24)));
+        EXPECT_EQ(parsed_event->name(), "test3");
+        EXPECT_EQ(parsed_event->group(), "default");
 
-        assert(parsed_event->numArguments() == 5);
-        assert(parsed_event->argument(0).type == events::parser::BaseType::uint8_t);
-        assert(parsed_event->argumentValue(0).value.val_uint8_t == a);
-        assert(parsed_event->argument(1).type == events::parser::BaseType::float_t);
-        assert(parsed_event->argumentValue(1).value.val_float == b);
-        assert(parsed_event->argument(2).type == events::parser::BaseType::uint16_t);
-        assert(parsed_event->argumentValue(2).value.val_uint16_t == c);
-        assert(parsed_event->argument(3).type == events::parser::BaseType::uint32_t);
-        assert(parsed_event->argumentValue(3).value.val_uint32_t == d);
-        assert(parsed_event->argument(4).type == events::parser::BaseType::uint64_t);
-        assert(parsed_event->argumentValue(4).value.val_uint64_t == e);
+        ASSERT_EQ(parsed_event->numArguments(), 5);
+        EXPECT_EQ(parsed_event->argument(0).type, events::parser::BaseType::uint8_t);
+        EXPECT_EQ(parsed_event->argumentValue(0).value.val_uint8_t, a);
+        EXPECT_EQ(parsed_event->argument(1).type, events::parser::BaseType::float_t);
+        EXPECT_EQ(parsed_event->argumentValue(1).value.val_float, b);
+        EXPECT_EQ(parsed_event->argument(2).type, events::parser::BaseType::uint16_t);
+        EXPECT_EQ(parsed_event->argumentValue(2).value.val_uint16_t, c);
+        EXPECT_EQ(parsed_event->argument(3).type, events::parser::BaseType::uint32_t);
+        EXPECT_EQ(parsed_event->argumentValue(3).value.val_uint32_t, d);
+        EXPECT_EQ(parsed_event->argument(4).type, events::parser::BaseType::uint64_t);
+        EXPECT_EQ(parsed_event->argumentValue(4).value.val_uint64_t, e);
 
         printf("message=%s\n", parsed_event->message().c_str());
         printf("description=%s\n", parsed_event->description().c_str());
-        assert(parsed_event->message() == "Arguments: 42 321.3 9182 663281 2834873473267162");
-        assert(parsed_event->description() == "#url<link=www.test.com/a/b/c?x=1>#\nkeep this. P");
+        EXPECT_EQ(parsed_event->message(), "Arguments: 42 321.3 9182 663281 2834873473267162");
+        EXPECT_EQ(parsed_event->description(), "#url<link=www.test.com/a/b/c?x=1>#\nkeep this. P");
 
         uint8_t a2;
         float b2;
@@ -123,7 +129,7 @@ int main(int argc, char** argv)
         uint32_t d2;
         uint64_t e2;
         events::test::decode_test3(event, a2, b2, c2, d2, e2);
-        assert(a == a2 && b == b2 && c == c2 && d == d2 && e == e2);
+        EXPECT_TRUE(a == a2 && b == b2 && c == c2 && d == d2 && e == e2);
     }
 
     {
@@ -132,26 +138,26 @@ int main(int argc, char** argv)
         events::EventType event = events::test::create_test4(events::Log::Info, a);
 
         std::unique_ptr<events::parser::ParsedEvent> parsed_event = p.parse(event);
-        assert(parsed_event);
-        assert(parsed_event->id() == event.id);
-        assert(event.id == 2307043 | (1 << 24));
-        assert(parsed_event->name() == "test4");
+        ASSERT_TRUE(parsed_event);
+        EXPECT_EQ(parsed_event->id(), event.id);
+        EXPECT_EQ(event.id, (2307043 | (1 << 24)));
+        EXPECT_EQ(parsed_event->name(), "test4");
 
-        assert(parsed_event->numArguments() == 1);
-        assert(parsed_event->argument(0).type == events::parser::BaseType::uint8_t);
-        assert(parsed_event->argument(0).isEnum());
-        assert(parsed_event->argument(0).enum_def->name == "enum_bitfield_t");
-        assert(parsed_event->argument(0).enum_def->event_namespace == "test2");
-        assert(parsed_event->argument(0).enum_def->is_bitfield);
-        assert(parsed_event->argument(0).enum_def->type == events::parser::BaseType::uint8_t);
-        assert(parsed_event->argumentValue(0).value.val_uint8_t == (uint8_t)a);
+        ASSERT_EQ(parsed_event->numArguments(), 1);
+        EXPECT_EQ(parsed_event->argument(0).type, events::parser::BaseType::uint8_t);
+        EXPECT_TRUE(parsed_event->argument(0).isEnum());
+        EXPECT_EQ(parsed_event->argument(0).enum_def->name, "enum_bitfield_t");
+        EXPECT_EQ(parsed_event->argument(0).enum_def->event_namespace, "test2");
+        EXPECT_TRUE(parsed_event->argument(0).enum_def->is_bitfield);
+        EXPECT_EQ(parsed_event->argument(0).enum_def->type, events::parser::BaseType::uint8_t);
+        EXPECT_EQ(parsed_event->argumentValue(0).value.val_uint8_t, (uint8_t)a);
 
         printf("message=%s\n", parsed_event->message().c_str());
         printf("description=%s\n", parsed_event->description().c_str());
-        assert(parsed_event->message() == "Bitfield value: Bit 2/ Bit 3");
-        assert(parsed_event->description() == "");
+        EXPECT_EQ(parsed_event->message(), "Bitfield value: Bit 2/ Bit 3");
+        EXPECT_EQ(parsed_event->description(), "");
 
-        assert(a & events::test2::enums::enum_bitfield_t::bit2);
+        EXPECT_TRUE(a & events::test2::enums::enum_bitfield_t::bit2);
     }
 
     {
@@ -187,26 +193,26 @@ int main(int argc, char** argv)
         };
 
         std::unique_ptr<events::parser::ParsedEvent> parsed_event = p.parse(event);
-        assert(parsed_event);
-        assert(parsed_event->id() == event.id);
-        assert(event.id == 2307044 | (1 << 24));
-        assert(parsed_event->name() == "test5");
-        assert(parsed_event->group() == "default");
+        ASSERT_TRUE(parsed_event);
+        EXPECT_EQ(parsed_event->id(), event.id);
+        EXPECT_EQ(event.id, (2307044 | (1 << 24)));
+        EXPECT_EQ(parsed_event->name(), "test5");
+        EXPECT_EQ(parsed_event->group(), "default");
 
-        assert(parsed_event->numArguments() == 4);
-        assert(parsed_event->argument(0).type == events::parser::BaseType::float_t);
-        assert(parsed_event->argumentValue(0).value.val_float == a);
-        assert(parsed_event->argument(1).type == events::parser::BaseType::float_t);
-        assert(parsed_event->argumentValue(1).value.val_float == b);
-        assert(parsed_event->argument(2).type == events::parser::BaseType::int8_t);
-        assert(parsed_event->argumentValue(2).value.val_int8_t == c);
-        assert(parsed_event->argument(3).type == events::parser::BaseType::uint64_t);
-        assert(parsed_event->argumentValue(3).value.val_uint64_t == d);
+        ASSERT_EQ(parsed_event->numArguments(), 4);
+        EXPECT_EQ(parsed_event->argument(0).type, events::parser::BaseType::float_t);
+        EXPECT_EQ(parsed_event->argumentValue(0).value.val_float, a);
+        EXPECT_EQ(parsed_event->argument(1).type, events::parser::BaseType::float_t);
+        EXPECT_EQ(parsed_event->argumentValue(1).value.val_float, b);
+        EXPECT_EQ(parsed_event->argument(2).type, events::parser::BaseType::int8_t);
+        EXPECT_EQ(parsed_event->argumentValue(2).value.val_int8_t, c);
+        EXPECT_EQ(parsed_event->argument(3).type, events::parser::BaseType::uint64_t);
+        EXPECT_EQ(parsed_event->argumentValue(3).value.val_uint64_t, d);
 
         printf("message=%s\n", parsed_event->message().c_str());
         printf("description=%s\n", parsed_event->description().c_str());
-        assert(parsed_event->message() == "Testing units: 16.423 m");
-        assert(parsed_event->description() == R"STR(0.016423 kilometers 16.423 C
+        EXPECT_EQ(parsed_event->message(), "Testing units: 16.423 m");
+        EXPECT_EQ(parsed_event->description(), R"STR(0.016423 kilometers 16.423 C
 9472.324219 m^2
 -54 meters
 4613686018427387904 meters per second)STR");
@@ -216,44 +222,41 @@ int main(int argc, char** argv)
     }
 
     {
-        events::test2::enums::enum_t a = events::test2::enums::enum_t::one;
-        events::test2::enums::enum_t b = events::test2::enums::enum_t::large;
+        const auto a = events::test2::enums::enum_t::one;
+        const auto b = events::test2::enums::enum_t::large;
         events::EventType event =
             events::test::create_test_enum({events::Log::Info, events::LogInternal::Warning}, a, b);
 
         std::unique_ptr<events::parser::ParsedEvent> parsed_event = p.parse(event);
-        assert(parsed_event);
-        assert(parsed_event->id() == event.id);
-        assert(event.id == 1531103 | (1 << 24));
-        assert(parsed_event->name() == "test_enum");
-        assert(parsed_event->group() == "custom_group");
+        ASSERT_TRUE(parsed_event);
+        EXPECT_EQ(parsed_event->id(), event.id);
+        EXPECT_EQ(event.id, (1531103 | (1 << 24)));
+        EXPECT_EQ(parsed_event->name(), "test_enum");
+        EXPECT_EQ(parsed_event->group(), "custom_group");
 
-        assert(parsed_event->numArguments() == 2);
-        assert(parsed_event->argument(0).type == events::parser::BaseType::uint64_t);
-        assert(parsed_event->argument(0).isEnum());
-        assert(parsed_event->argument(0).enum_def->name == "enum_t");
-        assert(parsed_event->argument(0).enum_def->event_namespace == "test2");
-        assert(parsed_event->argument(0).enum_def->type == events::parser::BaseType::uint64_t);
-        assert(parsed_event->argumentValue(0).value.val_uint64_t == (uint64_t)a);
+        ASSERT_EQ(parsed_event->numArguments(), 2);
+        EXPECT_EQ(parsed_event->argument(0).type, events::parser::BaseType::uint64_t);
+        EXPECT_TRUE(parsed_event->argument(0).isEnum());
+        EXPECT_EQ(parsed_event->argument(0).enum_def->name, "enum_t");
+        EXPECT_EQ(parsed_event->argument(0).enum_def->event_namespace, "test2");
+        EXPECT_EQ(parsed_event->argument(0).enum_def->type, events::parser::BaseType::uint64_t);
+        EXPECT_EQ(parsed_event->argumentValue(0).value.val_uint64_t, (uint64_t)a);
 
-        assert(parsed_event->argument(1).type == events::parser::BaseType::uint64_t);
-        assert(parsed_event->argument(1).isEnum());
-        assert(parsed_event->argument(1).enum_def->name == "enum_t");
-        assert(parsed_event->argument(1).enum_def->event_namespace == "test2");
-        assert(parsed_event->argument(1).enum_def->type == events::parser::BaseType::uint64_t);
-        assert(parsed_event->argumentValue(1).value.val_uint64_t == (uint64_t)b);
+        EXPECT_EQ(parsed_event->argument(1).type, events::parser::BaseType::uint64_t);
+        EXPECT_TRUE(parsed_event->argument(1).isEnum());
+        EXPECT_EQ(parsed_event->argument(1).enum_def->name, "enum_t");
+        EXPECT_EQ(parsed_event->argument(1).enum_def->event_namespace, "test2");
+        EXPECT_EQ(parsed_event->argument(1).enum_def->type, events::parser::BaseType::uint64_t);
+        EXPECT_EQ(parsed_event->argumentValue(1).value.val_uint64_t, (uint64_t)b);
 
         printf("message=%s\n", parsed_event->message().c_str());
         printf("description=%s\n", parsed_event->description().c_str());
-        assert(parsed_event->message() == "Event using enums. Enum values: One value, Large value");
-        assert(parsed_event->description() == "");
+        EXPECT_EQ(parsed_event->message(), "Event using enums. Enum values: One value, Large value");
+        EXPECT_EQ(parsed_event->description(), "");
 
         events::test2::enums::enum_t a2;
         events::test2::enums::enum_t b2;
         events::test::decode_test_enum(event, a2, b2);
-        assert(a == a2 && b == b2);
+        EXPECT_TRUE(a == a2 && b == b2);
     }
-
-    printf("Success!\n");
-    return 0;
 }
