@@ -44,7 +44,7 @@ bool HealthAndArmingChecks::handleEvent(const events::parser::ParsedEvent& event
         case Type::ArmingCheckSummary:
             reset();
             if (event.numArguments() >= 5 && event.argument(1).isEnum() && event.argument(3).isEnum()) {
-                _current_chunk = event.argumentValueInt(0);
+                _current_chunk = static_cast<int>(event.argumentValueInt(0));
                 _chunks[_current_chunk] = {};
                 parser::EnumDefinition* health_enum = event.argument(1).enum_def;
                 uint64_t error = event.argumentValueInt(1);
@@ -85,12 +85,12 @@ bool HealthAndArmingChecks::handleEvent(const events::parser::ParsedEvent& event
             check.message = event.message();
             check.description = event.description();
             check.affected_mode_groups = event.argumentValueInt(0);
-            check.affected_health_component_index = event.argumentValueInt(1);
+            check.affected_health_component_index = static_cast<uint8_t>(event.argumentValueInt(1));
             check.log_levels = event.eventData().log_levels;
             _chunks[_current_chunk]._checks.push_back(check);
         } break;
         case Type::HealthSummary:
-            int chunk_id = event.argumentValueInt(0);
+            int chunk_id = static_cast<int>(event.argumentValueInt(0));
             if (event.numArguments() >= 4 && _current_chunk == chunk_id) {
                 uint64_t is_present = event.argumentValueInt(1);
                 uint64_t error = event.argumentValueInt(2);
@@ -184,7 +184,7 @@ bool HealthAndArmingChecks::Results::canArm(int mode_group_index) const
     if (mode_group_index >= (int)_mode_groups.groups.size()) {
         return false;
     }
-    return _mode_groups.groups[mode_group_index].can_arm;
+    return _mode_groups.groups[static_cast<size_t>(mode_group_index)].can_arm;
 }
 
 bool HealthAndArmingChecks::Results::canRun(int mode_group_index) const
@@ -192,7 +192,7 @@ bool HealthAndArmingChecks::Results::canRun(int mode_group_index) const
     if (mode_group_index >= (int)_mode_groups.groups.size()) {
         return false;
     }
-    return _mode_groups.groups[mode_group_index].can_run;
+    return _mode_groups.groups[static_cast<size_t>(mode_group_index)].can_run;
 }
 
 std::vector<HealthAndArmingChecks::Check> HealthAndArmingChecks::Results::checks(int mode_group_index) const

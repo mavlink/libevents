@@ -130,13 +130,13 @@ string ParsedEvent::getFormattedArgument(int argument_idx, int num_decimal_digit
     Argument arg = argumentValue(argument_idx);
     uint64_t value = 0;
 
-    switch (_event_definition.arguments[argument_idx].type) {
+    switch (_event_definition.arguments[static_cast<size_t>(argument_idx)].type) {
         case BaseType::uint8_t:
             value = arg.value.val_uint8_t;
             argument_stream << (int)arg.value.val_uint8_t;
             break;
         case BaseType::int8_t:
-            value = arg.value.val_int8_t;
+            value = static_cast<uint64_t>(arg.value.val_int8_t);
             argument_stream << (int)arg.value.val_int8_t;
             break;
         case BaseType::uint16_t:
@@ -144,7 +144,7 @@ string ParsedEvent::getFormattedArgument(int argument_idx, int num_decimal_digit
             argument_stream << arg.value.val_uint16_t;
             break;
         case BaseType::int16_t:
-            value = arg.value.val_int16_t;
+            value = static_cast<uint64_t>(arg.value.val_int16_t);
             argument_stream << arg.value.val_int16_t;
             break;
         case BaseType::uint32_t:
@@ -152,7 +152,7 @@ string ParsedEvent::getFormattedArgument(int argument_idx, int num_decimal_digit
             argument_stream << arg.value.val_uint32_t;
             break;
         case BaseType::int32_t:
-            value = arg.value.val_int32_t;
+            value = static_cast<uint64_t>(arg.value.val_int32_t);
             argument_stream << arg.value.val_int32_t;
             break;
         case BaseType::uint64_t:
@@ -160,7 +160,7 @@ string ParsedEvent::getFormattedArgument(int argument_idx, int num_decimal_digit
             argument_stream << arg.value.val_uint64_t;
             break;
         case BaseType::int64_t:
-            value = arg.value.val_int64_t;
+            value = static_cast<uint64_t>(arg.value.val_int64_t);
             argument_stream << arg.value.val_int64_t;
             break;
         case BaseType::float_t:
@@ -179,7 +179,7 @@ string ParsedEvent::getFormattedArgument(int argument_idx, int num_decimal_digit
         if (unit == "m_v")
             normal_unit = "m";
 
-        switch (_event_definition.arguments[argument_idx].type) {
+        switch (_event_definition.arguments[static_cast<size_t>(argument_idx)].type) {
             case BaseType::float_t:
                 if (_config.formatters.float_value_with_unit) {
                     string value_with_unit =
@@ -203,9 +203,9 @@ string ParsedEvent::getFormattedArgument(int argument_idx, int num_decimal_digit
         }
     }
 
-    if (_event_definition.arguments[argument_idx].isEnum()) {
+    if (_event_definition.arguments[static_cast<size_t>(argument_idx)].isEnum()) {
         argument_stream.str("");
-        EnumDefinition* enum_def = _event_definition.arguments[argument_idx].enum_def;
+        EnumDefinition* enum_def = _event_definition.arguments[static_cast<size_t>(argument_idx)].enum_def;
         if (enum_def->is_bitfield) {
             int bits = baseTypeSize(enum_def->type) * 8;
             bool had_bit = false;
@@ -364,22 +364,22 @@ string ParsedEvent::processMessage(const string& message) const
 
             const string format = ret.substr(i + 1, format_end_pos - i - 1);
             char* argument_end = nullptr;
-            int argument_idx = strtol(format.c_str(), &argument_end, 0) - 1;
+            int argument_idx = static_cast<int>(strtol(format.c_str(), &argument_end, 0)) - 1;
             if (argument_end == nullptr || argument_idx < 0 ||
                 argument_idx >= (int)_event_definition.arguments.size()) {
                 continue;
             }
 
-            size_t index = argument_end - format.c_str();
+            size_t index = static_cast<size_t>(argument_end - format.c_str());
 
             // check for decimal digits [:.NUM_DECIMAL_DIGITS]
-            int num_decimal_digits = -1;
+            ssize_t num_decimal_digits = -1;
             if (index < format.length() && format[index] == ':') {
                 ++index;
                 if (index < format.length() && format[index] == '.') {
                     num_decimal_digits = strtol(format.c_str() + index + 1, &argument_end, 0);
                     if (argument_end) {
-                        index = argument_end - format.c_str();
+                        index = static_cast<size_t>(argument_end - format.c_str());
                     }
                 }
             }
@@ -413,15 +413,15 @@ string ParsedEvent::processMessage(const string& message) const
 ParsedEvent::Argument ParsedEvent::argumentValue(int index) const
 {
     int offset = 0;
-    for (int i = 0; i < index; ++i) {
+    for (size_t i = 0; i < static_cast<size_t>(index); ++i) {
         offset += baseTypeSize(_event_definition.arguments[i].type);
     }
-    int type_size = baseTypeSize(_event_definition.arguments[index].type);
+    int type_size = baseTypeSize(_event_definition.arguments[static_cast<size_t>(index)].type);
     if (offset + type_size > (int)sizeof(_event.arguments)) {
         return {};
     }
     Argument value;
-    memcpy(&value.value, _event.arguments + offset, type_size);
+    memcpy(&value.value, _event.arguments + offset, static_cast<size_t>(type_size));
     return value;
 }
 
@@ -431,7 +431,7 @@ uint64_t ParsedEvent::argumentValueInt(int index) const
         return 0;
     }
     Argument value = argumentValue(index);
-    switch (_event_definition.arguments[index].type) {
+    switch (_event_definition.arguments[static_cast<size_t>(index)].type) {
         case BaseType::uint8_t: return (uint64_t)value.value.val_uint8_t;
         case BaseType::int8_t: return (uint64_t)value.value.val_int8_t;
         case BaseType::uint16_t: return (uint64_t)value.value.val_uint16_t;
@@ -664,7 +664,7 @@ bool Parser::loadDefinitions(const json& j)
                      group_iter != navigation_mode_groups_js["groups"].end(); ++group_iter) {
                     const auto& entry = group_iter.value();
                     std::set<uint32_t> modes;
-                    int value = std::stoull(group_iter.key());
+                    int value = static_cast<int>(std::stoull(group_iter.key()));
                     for (json::const_iterator mode_iter = entry.begin(); mode_iter != entry.end(); ++mode_iter) {
                         modes.insert(mode_iter.value().get<uint32_t>());
                     }

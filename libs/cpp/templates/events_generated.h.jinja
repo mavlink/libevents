@@ -162,6 +162,9 @@ static inline void decode_{{ event.name }}(const EventType &event
 	memcpy(&{{ arg.name }}, event.arguments+{{ ns.offset }}, sizeof({{ arg.type | cpp_namespace}}));
 	{%- set ns.offset = ns.offset + constants.base_types[arg.base_type].size -%}
 {%- endfor %}
+{%- if event.arguments|length < 1 %}
+    (void)event;
+{%- endif %}
 }
 {% endfor %}
 {% endfor %}

@@ -16,12 +16,21 @@ endif()
 
 include_directories(include)
 
-add_subdirectory(parse)
-add_subdirectory(protocol EXCLUDE_FROM_ALL)
 if(MAIN_PROJECT)
+	# compiler specific flags
+	if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang"))
+		add_compile_options(
+			-fcolor-diagnostics # force color for clang (needed for clang + ccache)
+		)
+	elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+		add_compile_options(-fdiagnostics-color=always)
+	endif()
+
 	add_subdirectory(tests)
 endif()
 
+add_subdirectory(parse)
+add_subdirectory(protocol EXCLUDE_FROM_ALL)
 
 find_program(CLANG_FORMAT_EXECUTABLE
 	NAMES clang-format clang-format-5.0
