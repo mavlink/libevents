@@ -49,7 +49,7 @@ echo "Running C++ tests"
 BUILD_DIR=build_ci
 [ ! -d "$BUILD_DIR" ] && mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
-cmake ..
+cmake .. -G "Unix Makefiles"
 make
 echo "Running Tests"
 ./tests/parser_test
