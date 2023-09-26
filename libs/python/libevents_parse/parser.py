@@ -1,6 +1,6 @@
 """ python events parsing libary """
 import json
-from typing import Tuple
+from typing import Tuple, Optional
 import struct
 import re
 
@@ -14,12 +14,14 @@ _base_types = {
     "uint64_t": {"size": 8, "unpack": struct.Struct('<Q').unpack},
     "int64_t": {"size": 8, "unpack": struct.Struct('<q').unpack},
     "float": {"size": 4, "unpack": struct.Struct('<f').unpack},
-    }
+}
+
 
 class ParserException(Exception):
     """
     Exception to indicate a parser error.
     """
+
 
 class ParsedEvent:
     """ representation of a parsed event (with metadata) """
@@ -33,23 +35,23 @@ class ParsedEvent:
         self._profile = profile
         self._debug = debug
 
-        self._values = [] # tuples of (value, enum)
+        self._values = []  # tuples of (value, enum)
         offset = 0
         for arg in self._event.get('arguments', []):
             base_type, enum = self._get_basetype(arg)
             size = _base_types[base_type]["size"]
-            value, = _base_types[base_type]["unpack"](self._arguments[offset:offset+size])
+            value, = _base_types[base_type]["unpack"](self._arguments[offset:offset + size])
             self._values.append((value, enum))
             offset += size
 
         self._debug_print("Event: {}, {}, values={}".format(self.event_id(),
                                                             self.name(), self._values))
 
-    def _get_basetype(self, event_arg: dict) -> Tuple[str, dict]:
+    def _get_basetype(self, event_arg: dict) -> Tuple[str, Optional[dict]]:
         """ get the basic type, and the enum definition if it's an enum """
         arg_type = event_arg['type']
         if arg_type in _base_types:
-            return (arg_type, None)
+            return arg_type, None
         # enum
         if '::' in arg_type:
             enum_type = arg_type
@@ -57,7 +59,6 @@ class ParsedEvent:
             enum_type = self.namespace() + '::' + arg_type
         enum = self._event_extras['enums'][enum_type]
         return (enum['type'], enum)
-
 
     def _debug_print(self, msg: str):
         """ debug output """
@@ -119,8 +120,8 @@ class ParsedEvent:
             ret_value = ""
             had_bit = False
             separator = enum.get('separator', '|')
-            for i in range(size*8):
-                bit = 1<<i
+            for i in range(size * 8):
+                bit = 1 << i
                 if value & bit:
                     if had_bit:
                         ret_value += separator
@@ -182,8 +183,8 @@ class ParsedEvent:
 
         while i < len(msg):
 
-            if msg[i] == '\\': # escaped character
-                msg = msg[:i]+msg[i+1:]
+            if msg[i] == '\\':  # escaped character
+                msg = msg[:i] + msg[i + 1:]
                 i += 1
                 continue
 
@@ -198,13 +199,13 @@ class ParsedEvent:
 
                 tag_name = m.group(1)
                 content_start_idx = m.start(4)
-                end_tag_idx = msg.find('</'+tag_name+'>', i+content_start_idx)
+                end_tag_idx = msg.find('</' + tag_name + '>', i + content_start_idx)
                 if end_tag_idx == -1:
                     self._debug_print("Error: invalid format")
                     i += 1
                     continue
 
-                tag_content = msg[i+content_start_idx:end_tag_idx]
+                tag_content = msg[i + content_start_idx:end_tag_idx]
                 num_skip = 0
                 if tag_name == "profile":
                     profile = ''
@@ -228,7 +229,7 @@ class ParsedEvent:
                     escaped_content = self._event_extras['message-escape'](tag_content)
                     tag_content = self._event_extras['param-formatter'](escaped_content)
                     num_skip = len(tag_content)
-                else: # unknown tag
+                else:  # unknown tag
                     self._debug_print("unknown tag: {}".format(tag_name))
                     tag_content = ''
 
@@ -243,7 +244,7 @@ class ParsedEvent:
                     i += 1
                     self._debug_print("Error: } not found")
                     continue
-                arg = msg[i+1:arg_end_idx]
+                arg = msg[i + 1:arg_end_idx]
                 m = re.match(r"^(\d+)(?::(?:\.(\d+))?)?(m|m_v|m/s|m\^2|C)?$", arg)
                 if not m:
                     i += 1
@@ -256,7 +257,7 @@ class ParsedEvent:
                     continue
                 print_fmt = "{}"
                 if m.group(2) is not None:
-                    print_fmt = "{:."+m.group(2)+"f}"
+                    print_fmt = "{:." + m.group(2) + "f}"
                 arg_value = self.argument_display_value(arg_idx)
                 arg_value_str = print_fmt.format(arg_value)
                 unit = m.group(3)
@@ -326,7 +327,7 @@ class Parser:
             namespace = comp["namespace"]
             for enum_name in comp.get("enums", []):
                 enum = comp["enums"][enum_name]
-                self._enums[namespace+'::'+enum_name] = enum
+                self._enums[namespace + '::' + enum_name] = enum
 
     def parse(self, event_id: int, arguments: bytes) -> ParsedEvent:
         """ Parse event from event ID and arguments """
