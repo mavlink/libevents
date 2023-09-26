@@ -166,6 +166,20 @@ class ParsedEvent:
          * - returned string will be trimmed (removed whitespace)
          """
         i = 0
+        escape_start = 0
+
+        def escape_previous(msg: str, up_to_n: int) -> (str, int):
+            """ Escape msg[escape_start:up_to_n], and return msg[0:up_to_n]
+            :param msg: string to escape
+            :param up_to_n: max length
+            :return: (msg, escape_length_difference)
+            """
+            if escape_start == up_to_n:
+                return msg[0:escape_start], 0
+            escaped = (msg[0:escape_start] +
+                       self._event_extras['message-escape'](msg[escape_start:up_to_n]))
+            return escaped, len(escaped) - up_to_n
+
         while i < len(msg):
 
             if msg[i] == '\\': # escaped character
@@ -207,17 +221,21 @@ class ParsedEvent:
                         url = tag_content
                     else:
                         url = m.group(3)
-                    tag_content = self._event_extras['url-formatter'](tag_content, url)
+                    escaped_content = self._event_extras['message-escape'](tag_content)
+                    tag_content = self._event_extras['url-formatter'](escaped_content, url)
                     num_skip = len(tag_content)
                 elif tag_name == 'param':
-                    tag_content = self._event_extras['param-formatter'](tag_content)
+                    escaped_content = self._event_extras['message-escape'](tag_content)
+                    tag_content = self._event_extras['param-formatter'](escaped_content)
                     num_skip = len(tag_content)
                 else: # unknown tag
                     self._debug_print("unknown tag: {}".format(tag_name))
                     tag_content = ''
 
-                msg = msg[:i] + tag_content + msg[end_tag_idx+len(tag_name)+3:]
-                i += num_skip
+                msg_escaped, escape_len_diff = escape_previous(msg, i)
+                msg = msg_escaped + tag_content + msg[end_tag_idx + len(tag_name) + 3:]
+                i += num_skip + escape_len_diff
+                escape_start = i
 
             elif msg[i] == '{':
                 arg_end_idx = msg.find('}', i)
@@ -244,10 +262,13 @@ class ParsedEvent:
                 unit = m.group(3)
                 if unit is not None:
                     arg_value_str += ' ' + self._parse_unit(unit)
-                msg = msg[:i] + arg_value_str + msg[arg_end_idx+1:]
-                i += len(arg_value_str)
+                msg_escaped, escape_len_diff = escape_previous(msg, i)
+                msg = msg_escaped + arg_value_str + msg[arg_end_idx + 1:]
+                i += len(arg_value_str) + escape_len_diff
+                escape_start = i
             else:
                 i += 1
+        msg, _ = escape_previous(msg, len(msg))
         return msg.strip()
 
     @staticmethod
@@ -266,8 +287,9 @@ class Parser:
         self._events = {}
         self._enums = {}
         self._debug = debug
-        self._url_formatter = lambda content, url: url
+        self._url_formatter = lambda content, url: content
         self._param_formatter = lambda param_name: param_name
+        self._message_escape = lambda msg: msg
 
     def load_definition_file(self, json_file: str):
         """ load event definitions from a json file """
@@ -326,7 +348,8 @@ class Parser:
                         'enums': self._enums,
                         'url-formatter': self._url_formatter,
                         'param-formatter': self._param_formatter,
-                        }
+                        'message-escape': self._message_escape,
+                    }
                     return ParsedEvent(event, event_extras, arguments, events,
                                        self._profile, self._debug)
         return None
@@ -347,3 +370,9 @@ class Parser:
         """
         self._param_formatter = formatter
 
+    def set_message_escape_method(self, message_escape):
+        """ set message escape callback method.
+            Can be used to e.g. escape HTML characters in a message / description
+            :param message_escape: lambda with (msg: str) args
+        """
+        self._message_escape = message_escape
