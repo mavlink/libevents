@@ -67,7 +67,12 @@ using EventDefinitions = std::map<uint32_t, std::unique_ptr<EventDefinition>>;  
 struct Formatters {
     std::function<std::string(const std::string& content)> param = [](const std::string& content) { return content; };
     std::function<std::string(const std::string& content, const std::string& link)> url =
-        [](const std::string& /*content*/, const std::string& link) { return link; };
+        [](const std::string& content, const std::string& /*link*/) { return content; };
+    std::function<std::string(const std::string& str)> escape = [](const std::string& str) {
+        return str;
+    };  ///< escape the content of a message (non-param & url)
+    std::function<std::string(const std::string& str)>
+        post_transform;  ///< transform a fully parsed message/description
 
     std::function<std::string(int64_t value, const std::string& unit)> int_value_with_unit;
     std::function<std::string(float value, int num_decimal_digits, const std::string& unit)> float_value_with_unit;

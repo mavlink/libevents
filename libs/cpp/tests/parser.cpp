@@ -260,3 +260,118 @@ TEST(Parser, BasicAssertions)
         EXPECT_TRUE(a == a2 && b == b2);
     }
 }
+
+TEST(Parser, Escaping)
+{
+    events::parser::Parser p;
+    bool ret = p.loadDefinitionsFile(getTestJsonFile());
+    ASSERT_TRUE(ret);
+
+    p.setProfile("dev");
+
+    p.formatters().escape = [](const std::string& str) { return '[' + str + ']'; };
+
+    {
+        events::EventType event = events::test::create_test1(events::Log::Info);
+
+        std::unique_ptr<events::parser::ParsedEvent> parsed_event = p.parse(event);
+        ASSERT_TRUE(parsed_event);
+
+        printf("message=%s\n", parsed_event->message().c_str());
+        printf("description=%s\n", parsed_event->description().c_str());
+        EXPECT_EQ(parsed_event->message(), "[Test]");
+        EXPECT_EQ(parsed_event->description(), "");
+    }
+
+    {
+        int8_t a = -3;
+        int16_t b = -9238;
+        int32_t c = 832223;
+        int64_t d = -9277377287318721;
+        float e = 3423423.3423f;
+        events::EventType event = events::test::create_test2(events::Log::Info, a, b, c, d, e);
+
+        std::unique_ptr<events::parser::ParsedEvent> parsed_event = p.parse(event);
+        ASSERT_TRUE(parsed_event);
+
+        printf("message=%s\n", parsed_event->message().c_str());
+        printf("description=%s\n", parsed_event->description().c_str());
+        EXPECT_EQ(parsed_event->message(), "[Arguments: ]-3[ ]-9238[ ]832223[ ]-9277377287318721[ ]3423423.25");
+        EXPECT_EQ(parsed_event->description(), "[test\n<{}][PARAM][www.test.com]");
+    }
+
+    {
+        uint8_t a = 42;
+        float b = 321.3134554f;
+        uint16_t c = 9182;
+        uint32_t d = 663281;
+        uint64_t e = 2834873473267162;
+        events::EventType event = events::test::create_test3(events::Log::Info, a, b, c, d, e);
+
+        std::unique_ptr<events::parser::ParsedEvent> parsed_event = p.parse(event);
+        ASSERT_TRUE(parsed_event);
+
+        auto prev_url_formatter = p.formatters().url;
+        p.formatters().url = [](const std::string& content, const std::string& link) {
+            return "#" + content + "<link=" + link + ">#";
+        };
+
+        printf("message=%s\n", parsed_event->message().c_str());
+        printf("description=%s\n", parsed_event->description().c_str());
+        EXPECT_EQ(parsed_event->message(), "[Arguments: ]42[ ]321.3[ ]9182[ ]663281[ ]2834873473267162");
+        EXPECT_EQ(parsed_event->description(), "#[url]<link=www.test.com/a/b/c?x=1>#[\n][keep this. ][P][\n\n ]");
+
+        p.formatters().url = prev_url_formatter;
+    }
+
+    {
+        events::test2::enums::enum_bitfield_t a =
+            events::test2::enums::enum_bitfield_t::bit2 | events::test2::enums::enum_bitfield_t::bit3;
+        events::EventType event = events::test::create_test4(events::Log::Info, a);
+
+        std::unique_ptr<events::parser::ParsedEvent> parsed_event = p.parse(event);
+        ASSERT_TRUE(parsed_event);
+
+        printf("message=%s\n", parsed_event->message().c_str());
+        printf("description=%s\n", parsed_event->description().c_str());
+        EXPECT_EQ(parsed_event->message(), "[Bitfield value: ]Bit 2/ Bit 3");
+        EXPECT_EQ(parsed_event->description(), "");
+
+        EXPECT_TRUE(a & events::test2::enums::enum_bitfield_t::bit2);
+    }
+
+    {
+        float a = 16.423f;
+        float b = 9472.3245894327f;
+        int8_t c = -54;
+        uint64_t d = 4613686018427387904;
+        events::EventType event = events::test::create_test5(events::Log::Info, a, b, c, d);
+
+        std::unique_ptr<events::parser::ParsedEvent> parsed_event = p.parse(event);
+        ASSERT_TRUE(parsed_event);
+
+        printf("message=%s\n", parsed_event->message().c_str());
+        printf("description=%s\n", parsed_event->description().c_str());
+        EXPECT_EQ(parsed_event->message(), "[Testing units: ]16.423 m");
+        EXPECT_EQ(parsed_event->description(), R"STR(16.423 m[ ]16.423 C[
+]9472.324219 m^2[
+]-54 m[
+]4613686018427387904 m/s)STR");
+    }
+
+    {
+        const auto a = events::test2::enums::enum_t::one;
+        const auto b = events::test2::enums::enum_t::large;
+        events::EventType event =
+            events::test::create_test_enum({events::Log::Info, events::LogInternal::Warning}, a, b);
+
+        std::unique_ptr<events::parser::ParsedEvent> parsed_event = p.parse(event);
+        ASSERT_TRUE(parsed_event);
+        EXPECT_EQ(parsed_event->id(), event.id);
+
+        printf("message=%s\n", parsed_event->message().c_str());
+        printf("description=%s\n", parsed_event->description().c_str());
+        EXPECT_EQ(parsed_event->message(), "[Event using enums. Enum values: ]One value[, ]Large value");
+        EXPECT_EQ(parsed_event->description(), "");
+    }
+}

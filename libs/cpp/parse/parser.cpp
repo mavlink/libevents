@@ -261,9 +261,28 @@ string ParsedEvent::processMessage(const string& message) const
      * - returned string will be trimmed (removed whitespace)
      */
 
+    assert(_config.formatters.param);
+    assert(_config.formatters.url);
+    assert(_config.formatters.escape);
+
     string ret = message;
 
-    for (int i = 0; i < (int)ret.size(); ++i) {
+    size_t escape_start = 0;
+    auto escape_previous = [&escape_start, this](const string& str, size_t up_to_n,
+                                                 size_t& length_difference) -> string {
+        assert(escape_start <= up_to_n);
+        if (escape_start == up_to_n) {
+            length_difference = 0;
+            return str.substr(0, escape_start);
+        }
+
+        const string escaped =
+            str.substr(0, escape_start) + _config.formatters.escape(str.substr(escape_start, up_to_n - escape_start));
+        length_difference = escaped.size() - up_to_n;
+        return escaped;
+    };
+
+    for (size_t i = 0; i < ret.size(); ++i) {
         if (ret[i] == '\\') {
             ret.erase(i, 1);
 
@@ -305,13 +324,13 @@ string ParsedEvent::processMessage(const string& message) const
 
             size_t num_skip = 0;
             if (tag == "param") {
-                tag_content = _config.formatters.param(tag_content);
+                tag_content = _config.formatters.param(_config.formatters.escape(tag_content));
                 num_skip = tag_content.size();  // skip whatever we get back, don't try to parse
             } else if (tag == "a") {
                 if (argument.empty() || argument_name != "href") {
                     argument = tag_content;
                 }
-                tag_content = _config.formatters.url(tag_content, argument);
+                tag_content = _config.formatters.url(_config.formatters.escape(tag_content), argument);
                 num_skip = tag_content.size();  // skip whatever we get back, don't try to parse
             } else if (tag == "profile") {
                 if (argument_name == "name" && argument.size() > 0) {
@@ -331,8 +350,11 @@ string ParsedEvent::processMessage(const string& message) const
                 tag_content = "";
             }
 
-            ret = ret.substr(0, i) + tag_content + ret.substr(closing_tag_pos + tag.size() + 3);
-            i = i - 1 + num_skip;
+            size_t escape_length_difference;
+            ret = escape_previous(ret, i, escape_length_difference) + tag_content +
+                  ret.substr(closing_tag_pos + tag.size() + 3);
+            i = i - 1 + num_skip + escape_length_difference;
+            escape_start = i + 1;
 
         } else if (ret[i] == '{') {  // parse arguments printing
             size_t format_end_pos = ret.find('}', i);
@@ -368,15 +390,23 @@ string ParsedEvent::processMessage(const string& message) const
                 unit_str = format.substr(index);
             }
 
-            LIBEVENTS_PARSER_DEBUG_PRINTF("printf format: %s, arg idx=%i, digits=%i, unit=%s\n", format.c_str(),
+            LIBEVENTS_PARSER_DEBUG_PRINTF("printf format: %s, arg idx=%i, digits=%zi, unit=%s\n", format.c_str(),
                                           argument_idx, num_decimal_digits, unit_str.c_str());
-            string argument = getFormattedArgument(argument_idx, num_decimal_digits, unit_str);
-            ret = ret.substr(0, i) + argument + ret.substr(format_end_pos + 1);
-            i += argument.size() - 1;
+            string argument = getFormattedArgument(argument_idx, static_cast<int>(num_decimal_digits), unit_str);
+            size_t escape_length_difference;
+            ret = escape_previous(ret, i, escape_length_difference) + argument + ret.substr(format_end_pos + 1);
+            i += argument.size() - 1 + escape_length_difference;
+            escape_start = i + 1;
         }
     }
 
+    size_t escape_length_difference;
+    ret = escape_previous(ret, ret.length(), escape_length_difference);
+
     trim(ret);
+    if (_config.formatters.post_transform) {
+        ret = _config.formatters.post_transform(ret);
+    }
     return ret;
 }
 
