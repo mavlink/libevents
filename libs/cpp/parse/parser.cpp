@@ -373,11 +373,11 @@ string ParsedEvent::processMessage(const string& message) const
             size_t index = static_cast<size_t>(argument_end - format.c_str());
 
             // check for decimal digits [:.NUM_DECIMAL_DIGITS]
-            ssize_t num_decimal_digits = -1;
+            int num_decimal_digits = -1;
             if (index < format.length() && format[index] == ':') {
                 ++index;
                 if (index < format.length() && format[index] == '.') {
-                    num_decimal_digits = strtol(format.c_str() + index + 1, &argument_end, 0);
+                    num_decimal_digits = static_cast<int>(strtol(format.c_str() + index + 1, &argument_end, 0));
                     if (argument_end) {
                         index = static_cast<size_t>(argument_end - format.c_str());
                     }
@@ -390,9 +390,9 @@ string ParsedEvent::processMessage(const string& message) const
                 unit_str = format.substr(index);
             }
 
-            LIBEVENTS_PARSER_DEBUG_PRINTF("printf format: %s, arg idx=%i, digits=%zi, unit=%s\n", format.c_str(),
+            LIBEVENTS_PARSER_DEBUG_PRINTF("printf format: %s, arg idx=%i, digits=%i, unit=%s\n", format.c_str(),
                                           argument_idx, num_decimal_digits, unit_str.c_str());
-            string argument = getFormattedArgument(argument_idx, static_cast<int>(num_decimal_digits), unit_str);
+            string argument = getFormattedArgument(argument_idx, num_decimal_digits, unit_str);
             size_t escape_length_difference;
             ret = escape_previous(ret, i, escape_length_difference) + argument + ret.substr(format_end_pos + 1);
             i += argument.size() - 1 + escape_length_difference;
