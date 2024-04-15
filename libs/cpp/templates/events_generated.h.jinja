@@ -7,13 +7,9 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <libevents_definitions.h>
-
 namespace events
 {
 static constexpr int MAX_ARGUMENTS_SIZE = {{ config.max_arguments_size }}; ///< maximum number of bytes for all arguments
-
-static_assert(MAX_ARGUMENTS_SIZE <= sizeof(EventType::arguments), "Argument size mismatch");
 
 enum class LogLevel : uint8_t {
 	Emergency = 0,
@@ -130,13 +126,15 @@ namespace {{ component.namespace }} // component id: {{ component_id }}
  * Create event '{{ event.name }}'.
  * Message: {{ event.message }}
  */
-static inline EventType create_{{ event.name }}(const LogLevels &log_levels
+template<typename EventTypeT>
+static inline EventTypeT create_{{ event.name }}(const LogLevels &log_levels
 {%- for arg in event.arguments -%}
 , {{ arg.type | cpp_namespace }} {{ arg.name }}
 {%- endfor -%}
 )
 {
-	EventType event{};
+	static_assert(MAX_ARGUMENTS_SIZE <= sizeof(EventTypeT::arguments), "Argument size mismatch");
+	EventTypeT event{};
 	event.id = {{ event.id }};
 	event.log_levels = ((uint8_t)log_levels.internal << 4) | (uint8_t)log_levels.external;
 {%- set ns = namespace(offset=0) -%}
@@ -151,19 +149,21 @@ static inline EventType create_{{ event.name }}(const LogLevels &log_levels
  * Decode event '{{ event.name }}'.
  * Message: {{ event.message }}
  */
-static inline void decode_{{ event.name }}(const EventType &event
+template<typename EventTypeT>
+static inline void decode_{{ event.name }}(const EventTypeT &event
 {%- for arg in event.arguments -%}
 , {{ arg.type | cpp_namespace }} &{{ arg.name }}
 {%- endfor -%}
 )
 {
+	static_assert(MAX_ARGUMENTS_SIZE <= sizeof(EventTypeT::arguments), "Argument size mismatch");
 {%- set ns = namespace(offset=0) -%}
 {% for arg in event.arguments %}
 	memcpy(&{{ arg.name }}, event.arguments+{{ ns.offset }}, sizeof({{ arg.type | cpp_namespace}}));
 	{%- set ns.offset = ns.offset + constants.base_types[arg.base_type].size -%}
 {%- endfor %}
 {%- if event.arguments|length < 1 %}
-    (void)event;
+	(void)event;
 {%- endif %}
 }
 {% endfor %}

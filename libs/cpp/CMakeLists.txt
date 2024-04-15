@@ -1,9 +1,11 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.5)
 
 if (POLICY CMP0048)
 	cmake_policy(SET CMP0048 NEW)
 endif (POLICY CMP0048)
 project(libevents C CXX)
+
+include(GNUInstallDirs)
 
 set(LIBEVENTS_CPP_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 set(LIBEVENTS_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../..")
@@ -13,8 +15,6 @@ set(MAIN_PROJECT OFF)
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	set(MAIN_PROJECT ON)
 endif()
-
-include_directories(include)
 
 if(MAIN_PROJECT)
 	# compiler specific flags
@@ -29,8 +29,35 @@ if(MAIN_PROJECT)
 	add_subdirectory(tests)
 endif()
 
+add_subdirectory(common)
 add_subdirectory(parse)
-add_subdirectory(protocol EXCLUDE_FROM_ALL)
+add_subdirectory(protocol)
+
+add_library(libevents STATIC empty.cpp)
+target_link_libraries(libevents PUBLIC libevents_parser libevents_health_and_arming_checks libevents_receive)
+install(TARGETS libevents
+		EXPORT libevents
+		LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+		PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libevents)
+install(EXPORT libevents
+		FILE libevents.cmake
+		DESTINATION lib/cmake/libevents
+)
+include(CMakePackageConfigHelpers)
+# generate the config file that includes the exports
+configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/Config.cmake.in
+		"${CMAKE_CURRENT_BINARY_DIR}/libeventsConfig.cmake"
+		INSTALL_DESTINATION "lib/cmake/libevents"
+		NO_SET_AND_CHECK_MACRO
+		NO_CHECK_REQUIRED_COMPONENTS_MACRO
+)
+install(FILES
+		${CMAKE_CURRENT_BINARY_DIR}/libeventsConfig.cmake
+		DESTINATION lib/cmake/libevents
+)
+export(EXPORT libevents
+		FILE "${CMAKE_CURRENT_BINARY_DIR}/libevents.cmake"
+)
 
 find_program(CLANG_FORMAT_EXECUTABLE
 	NAMES clang-format clang-format-5.0
@@ -42,7 +69,6 @@ find_program(CLANG_FORMAT_EXECUTABLE
 )
 
 file(GLOB LIBEVENTS_CPP_FORMAT_SRCS
-	include/*.h
 	parse/*.cpp parse/*.h
 	protocol/*.cpp protocol/*.h
 	tests/*.cpp tests/*.h)

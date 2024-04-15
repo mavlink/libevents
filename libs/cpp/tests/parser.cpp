@@ -1,4 +1,6 @@
 
+#define LIBEVENTS_PARSER_DEBUG_PRINTF printf
+
 #include "parse/parser.h"
 
 #include <events_generated.h>
@@ -35,7 +37,7 @@ TEST(Parser, BasicAssertions)
     };
 
     {
-        events::EventType event = events::test::create_test1(events::Log::Info);
+        const auto event = events::test::create_test1<events::EventType>(events::Log::Info);
 
         std::unique_ptr<events::parser::ParsedEvent> parsed_event = p.parse(event);
         ASSERT_TRUE(parsed_event);
@@ -56,7 +58,7 @@ TEST(Parser, BasicAssertions)
         int32_t c = 832223;
         int64_t d = -9277377287318721;
         float e = 3423423.3423f;
-        events::EventType event = events::test::create_test2(events::Log::Info, a, b, c, d, e);
+        const auto event = events::test::create_test2<events::EventType>(events::Log::Info, a, b, c, d, e);
 
         std::unique_ptr<events::parser::ParsedEvent> parsed_event = p.parse(event);
         ASSERT_TRUE(parsed_event);
@@ -97,7 +99,7 @@ TEST(Parser, BasicAssertions)
         uint16_t c = 9182;
         uint32_t d = 663281;
         uint64_t e = 2834873473267162;
-        events::EventType event = events::test::create_test3(events::Log::Info, a, b, c, d, e);
+        const auto event = events::test::create_test3<events::EventType>(events::Log::Info, a, b, c, d, e);
 
         std::unique_ptr<events::parser::ParsedEvent> parsed_event = p.parse(event);
         ASSERT_TRUE(parsed_event);
@@ -135,7 +137,7 @@ TEST(Parser, BasicAssertions)
     {
         events::test2::enums::enum_bitfield_t a =
             events::test2::enums::enum_bitfield_t::bit2 | events::test2::enums::enum_bitfield_t::bit3;
-        events::EventType event = events::test::create_test4(events::Log::Info, a);
+        const auto event = events::test::create_test4<events::EventType>(events::Log::Info, a);
 
         std::unique_ptr<events::parser::ParsedEvent> parsed_event = p.parse(event);
         ASSERT_TRUE(parsed_event);
@@ -165,7 +167,7 @@ TEST(Parser, BasicAssertions)
         float b = 9472.3245894327f;
         int8_t c = -54;
         uint64_t d = 4613686018427387904;
-        events::EventType event = events::test::create_test5(events::Log::Info, a, b, c, d);
+        const auto event = events::test::create_test5<events::EventType>(events::Log::Info, a, b, c, d);
 
         // customize unit formatters
         p.formatters().float_value_with_unit = [](float value, int num_decimal_digits, const std::string& unit) {
@@ -224,8 +226,8 @@ TEST(Parser, BasicAssertions)
     {
         const auto a = events::test2::enums::enum_t::one;
         const auto b = events::test2::enums::enum_t::large;
-        events::EventType event =
-            events::test::create_test_enum({events::Log::Info, events::LogInternal::Warning}, a, b);
+        const auto event =
+            events::test::create_test_enum<events::EventType>({events::Log::Info, events::LogInternal::Warning}, a, b);
 
         std::unique_ptr<events::parser::ParsedEvent> parsed_event = p.parse(event);
         ASSERT_TRUE(parsed_event);
@@ -272,7 +274,7 @@ TEST(Parser, Escaping)
     p.formatters().escape = [](const std::string& str) { return '[' + str + ']'; };
 
     {
-        events::EventType event = events::test::create_test1(events::Log::Info);
+        const auto event = events::test::create_test1<events::EventType>(events::Log::Info);
 
         std::unique_ptr<events::parser::ParsedEvent> parsed_event = p.parse(event);
         ASSERT_TRUE(parsed_event);
@@ -289,7 +291,7 @@ TEST(Parser, Escaping)
         int32_t c = 832223;
         int64_t d = -9277377287318721;
         float e = 3423423.3423f;
-        events::EventType event = events::test::create_test2(events::Log::Info, a, b, c, d, e);
+        const auto event = events::test::create_test2<events::EventType>(events::Log::Info, a, b, c, d, e);
 
         std::unique_ptr<events::parser::ParsedEvent> parsed_event = p.parse(event);
         ASSERT_TRUE(parsed_event);
@@ -306,7 +308,7 @@ TEST(Parser, Escaping)
         uint16_t c = 9182;
         uint32_t d = 663281;
         uint64_t e = 2834873473267162;
-        events::EventType event = events::test::create_test3(events::Log::Info, a, b, c, d, e);
+        const auto event = events::test::create_test3<events::EventType>(events::Log::Info, a, b, c, d, e);
 
         std::unique_ptr<events::parser::ParsedEvent> parsed_event = p.parse(event);
         ASSERT_TRUE(parsed_event);
@@ -327,7 +329,7 @@ TEST(Parser, Escaping)
     {
         events::test2::enums::enum_bitfield_t a =
             events::test2::enums::enum_bitfield_t::bit2 | events::test2::enums::enum_bitfield_t::bit3;
-        events::EventType event = events::test::create_test4(events::Log::Info, a);
+        const auto event = events::test::create_test4<events::EventType>(events::Log::Info, a);
 
         std::unique_ptr<events::parser::ParsedEvent> parsed_event = p.parse(event);
         ASSERT_TRUE(parsed_event);
@@ -345,7 +347,7 @@ TEST(Parser, Escaping)
         float b = 9472.3245894327f;
         int8_t c = -54;
         uint64_t d = 4613686018427387904;
-        events::EventType event = events::test::create_test5(events::Log::Info, a, b, c, d);
+        const auto event = events::test::create_test5<events::EventType>(events::Log::Info, a, b, c, d);
 
         std::unique_ptr<events::parser::ParsedEvent> parsed_event = p.parse(event);
         ASSERT_TRUE(parsed_event);
@@ -362,8 +364,8 @@ TEST(Parser, Escaping)
     {
         const auto a = events::test2::enums::enum_t::one;
         const auto b = events::test2::enums::enum_t::large;
-        events::EventType event =
-            events::test::create_test_enum({events::Log::Info, events::LogInternal::Warning}, a, b);
+        const auto event =
+            events::test::create_test_enum<events::EventType>({events::Log::Info, events::LogInternal::Warning}, a, b);
 
         std::unique_ptr<events::parser::ParsedEvent> parsed_event = p.parse(event);
         ASSERT_TRUE(parsed_event);
