@@ -7,13 +7,9 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <libevents_definitions.h>
-
 namespace events
 {
 static constexpr int MAX_ARGUMENTS_SIZE = 25; ///< maximum number of bytes for all arguments
-
-static_assert(MAX_ARGUMENTS_SIZE <= sizeof(EventType::arguments), "Argument size mismatch");
 
 enum class LogLevel : uint8_t {
 	Emergency = 0,
@@ -166,9 +162,11 @@ namespace common // component id: 0
  * Create event 'cal_progress'.
  * Message: Calibration progress: {2}%
  */
-static inline EventType create_cal_progress(const LogLevels &log_levels, uint8_t proto_ver, int8_t progress, common::enums::calibration_type_t calibration_type, common::enums::calibration_sides_t required_sides)
+template<typename EventTypeT>
+static inline EventTypeT create_cal_progress(const LogLevels &log_levels, uint8_t proto_ver, int8_t progress, common::enums::calibration_type_t calibration_type, common::enums::calibration_sides_t required_sides)
 {
-	EventType event{};
+	static_assert(MAX_ARGUMENTS_SIZE <= sizeof(EventTypeT::arguments), "Argument size mismatch");
+	EventTypeT event{};
 	event.id = 1100;
 	event.log_levels = ((uint8_t)log_levels.internal << 4) | (uint8_t)log_levels.external;
 	memcpy(event.arguments+0, &proto_ver, sizeof(uint8_t));
@@ -182,8 +180,10 @@ static inline EventType create_cal_progress(const LogLevels &log_levels, uint8_t
  * Decode event 'cal_progress'.
  * Message: Calibration progress: {2}%
  */
-static inline void decode_cal_progress(const EventType &event, uint8_t &proto_ver, int8_t &progress, common::enums::calibration_type_t &calibration_type, common::enums::calibration_sides_t &required_sides)
+template<typename EventTypeT>
+static inline void decode_cal_progress(const EventTypeT &event, uint8_t &proto_ver, int8_t &progress, common::enums::calibration_type_t &calibration_type, common::enums::calibration_sides_t &required_sides)
 {
+	static_assert(MAX_ARGUMENTS_SIZE <= sizeof(EventTypeT::arguments), "Argument size mismatch");
 	memcpy(&proto_ver, event.arguments+0, sizeof(uint8_t));
 	memcpy(&progress, event.arguments+1, sizeof(int8_t));
 	memcpy(&calibration_type, event.arguments+2, sizeof(common::enums::calibration_type_t));
@@ -193,9 +193,11 @@ static inline void decode_cal_progress(const EventType &event, uint8_t &proto_ve
  * Create event 'cal_orientation_detected'.
  * Message: Orientation detected: {1}
  */
-static inline EventType create_cal_orientation_detected(const LogLevels &log_levels, common::enums::calibration_sides_t orientation, common::enums::calibration_action_t action)
+template<typename EventTypeT>
+static inline EventTypeT create_cal_orientation_detected(const LogLevels &log_levels, common::enums::calibration_sides_t orientation, common::enums::calibration_action_t action)
 {
-	EventType event{};
+	static_assert(MAX_ARGUMENTS_SIZE <= sizeof(EventTypeT::arguments), "Argument size mismatch");
+	EventTypeT event{};
 	event.id = 1101;
 	event.log_levels = ((uint8_t)log_levels.internal << 4) | (uint8_t)log_levels.external;
 	memcpy(event.arguments+0, &orientation, sizeof(common::enums::calibration_sides_t));
@@ -207,8 +209,10 @@ static inline EventType create_cal_orientation_detected(const LogLevels &log_lev
  * Decode event 'cal_orientation_detected'.
  * Message: Orientation detected: {1}
  */
-static inline void decode_cal_orientation_detected(const EventType &event, common::enums::calibration_sides_t &orientation, common::enums::calibration_action_t &action)
+template<typename EventTypeT>
+static inline void decode_cal_orientation_detected(const EventTypeT &event, common::enums::calibration_sides_t &orientation, common::enums::calibration_action_t &action)
 {
+	static_assert(MAX_ARGUMENTS_SIZE <= sizeof(EventTypeT::arguments), "Argument size mismatch");
 	memcpy(&orientation, event.arguments+0, sizeof(common::enums::calibration_sides_t));
 	memcpy(&action, event.arguments+1, sizeof(common::enums::calibration_action_t));
 }
@@ -216,9 +220,11 @@ static inline void decode_cal_orientation_detected(const EventType &event, commo
  * Create event 'cal_orientation_done'.
  * Message: Orientation Complete: {1}, next step: {2}
  */
-static inline EventType create_cal_orientation_done(const LogLevels &log_levels, common::enums::calibration_sides_t orientation, common::enums::calibration_action_t action)
+template<typename EventTypeT>
+static inline EventTypeT create_cal_orientation_done(const LogLevels &log_levels, common::enums::calibration_sides_t orientation, common::enums::calibration_action_t action)
 {
-	EventType event{};
+	static_assert(MAX_ARGUMENTS_SIZE <= sizeof(EventTypeT::arguments), "Argument size mismatch");
+	EventTypeT event{};
 	event.id = 1102;
 	event.log_levels = ((uint8_t)log_levels.internal << 4) | (uint8_t)log_levels.external;
 	memcpy(event.arguments+0, &orientation, sizeof(common::enums::calibration_sides_t));
@@ -230,8 +236,10 @@ static inline EventType create_cal_orientation_done(const LogLevels &log_levels,
  * Decode event 'cal_orientation_done'.
  * Message: Orientation Complete: {1}, next step: {2}
  */
-static inline void decode_cal_orientation_done(const EventType &event, common::enums::calibration_sides_t &orientation, common::enums::calibration_action_t &action)
+template<typename EventTypeT>
+static inline void decode_cal_orientation_done(const EventTypeT &event, common::enums::calibration_sides_t &orientation, common::enums::calibration_action_t &action)
 {
+	static_assert(MAX_ARGUMENTS_SIZE <= sizeof(EventTypeT::arguments), "Argument size mismatch");
 	memcpy(&orientation, event.arguments+0, sizeof(common::enums::calibration_sides_t));
 	memcpy(&action, event.arguments+1, sizeof(common::enums::calibration_action_t));
 }
@@ -239,9 +247,11 @@ static inline void decode_cal_orientation_done(const EventType &event, common::e
  * Create event 'cal_done'.
  * Message: Calibration Complete: {1}
  */
-static inline EventType create_cal_done(const LogLevels &log_levels, common::enums::calibration_result_t result)
+template<typename EventTypeT>
+static inline EventTypeT create_cal_done(const LogLevels &log_levels, common::enums::calibration_result_t result)
 {
-	EventType event{};
+	static_assert(MAX_ARGUMENTS_SIZE <= sizeof(EventTypeT::arguments), "Argument size mismatch");
+	EventTypeT event{};
 	event.id = 1103;
 	event.log_levels = ((uint8_t)log_levels.internal << 4) | (uint8_t)log_levels.external;
 	memcpy(event.arguments+0, &result, sizeof(common::enums::calibration_result_t));
@@ -252,8 +262,10 @@ static inline EventType create_cal_done(const LogLevels &log_levels, common::enu
  * Decode event 'cal_done'.
  * Message: Calibration Complete: {1}
  */
-static inline void decode_cal_done(const EventType &event, common::enums::calibration_result_t &result)
+template<typename EventTypeT>
+static inline void decode_cal_done(const EventTypeT &event, common::enums::calibration_result_t &result)
 {
+	static_assert(MAX_ARGUMENTS_SIZE <= sizeof(EventTypeT::arguments), "Argument size mismatch");
 	memcpy(&result, event.arguments+0, sizeof(common::enums::calibration_result_t));
 }
 

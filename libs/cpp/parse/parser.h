@@ -1,7 +1,5 @@
 #pragma once
 
-#include <libevents_definitions.h>
-
 #include <cstdint>
 #include <functional>
 #include <map>
@@ -10,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include "../common/event_type.h"
 #include "nlohmann_json/single_include/nlohmann/json_fwd.hpp"
 
 namespace events
