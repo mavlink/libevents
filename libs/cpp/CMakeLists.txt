@@ -16,7 +16,9 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	set(MAIN_PROJECT ON)
 endif()
 
-if(MAIN_PROJECT)
+option(ENABLE_TESTING "Enable building tests" ON)
+
+if(MAIN_PROJECT AND ENABLE_TESTING)
 	# compiler specific flags
 	if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang"))
 		add_compile_options(
