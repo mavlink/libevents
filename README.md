@@ -101,5 +101,74 @@ Rules:
   No extra padding, so accesses might be unaligned.
 - Everything assumes little endian
 
+## How to use the library
+### C++ (via cmake)
+There are two options to include the library in a project:
+- using a submodule / subdirectory
+- using `ExternalProject_Add`
+
+#### Using a Submodule
+At the repository as a submodule:
+```bash
+cd <your_project>
+git submodule add https://github.com/mavlink/libevents.git
+```
+In the `CMakeLists.txt`, add:
+```cmake
+add_subdirectory(libevents/libs/cpp)
+target_link_libraries(your_target PRIVATE libevents)
+```
+Then, in a header:
+```cpp
+// Enable debug output, comment out to disable
+#define LIBEVENTS_PARSER_DEBUG_PRINTF printf
+#define LIBEVENTS_DEBUG_PRINTF printf
+
+// Include the mavlink message definitions first
+// (If only the parser is used, mavlink is not required)
+#include <mavlink.h>
+
+#include "libevents/libs/cpp/protocol/receive.h"
+#include "libevents/libs/cpp/parse/parser.h"
+#include "libevents/libs/cpp/parse/health_and_arming_checks.h"
+#include "libevents/libs/cpp/generated/events_generated.h"
+```
+The headers can be used independently:
+- `receive.h`: Implements the receiving part of the events protocol over MAVLink.
+- `parser.h`: Allows to convert a serialized event (e.g. received from MAVLink) together with JSON metadata definitions back into the original message.
+- `health_and_arming_checks.h`: Implements the health and arming subprotocol (receiving part).
+- `events_generated.h`: Allows to serialize / deserialize commonly defined events.
 
 
+#### Using ExternalProject_Add
+In the `CMakeLists.txt`, add:
+```cmake
+ExternalProject_Add(
+        libevents
+        GIT_REPOSITORY https://github.com/mavlink/libevents.git
+        GIT_TAG main
+        SOURCE_SUBDIR libs/cpp
+        CMAKE_ARGS
+          "-DCMAKE_PREFIX_PATH:PATH=${CMAKE_PREFIX_PATH}"
+          "-DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_INSTALL_PREFIX}"
+          "-DCMAKE_TOOLCHAIN_FILE:PATH=${CMAKE_TOOLCHAIN_FILE}"
+          "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+          "-DBUILD_SHARED_LIBS=OFF"
+          "-DENABLE_TESTING=OFF"
+)
+
+find_package(libevents REQUIRED)
+
+target_link_libraries(your_target PRIVATE libevents)
+```
+Then, in a header:
+```cpp
+// Include the mavlink message definitions first
+// (If only the parser is used, mavlink is not required)
+#include <mavlink.h>
+
+#include <libevents/protocol/receive.h>
+#include <libevents/parse/parser.h>
+#include <libevents/parse/health_and_arming_checks.h>
+#include <libevents/generated/events_generated.h>
+```
