@@ -721,7 +721,7 @@ set<string> Parser::supportedProtocols(uint8_t component_id) const
     return iter->second;
 }
 
-Parser::NavigationModeGroups Parser::navigationModeGroups(uint8_t component_id)
+Parser::NavigationModeGroups Parser::navigationModeGroups(uint8_t component_id) const
 {
     auto iter = _navigation_mode_groups.find(component_id);
     if (iter == _navigation_mode_groups.end())

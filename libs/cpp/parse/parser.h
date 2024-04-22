@@ -161,7 +161,7 @@ public:
 
     std::set<std::string> supportedProtocols(uint8_t component_id) const;
 
-    NavigationModeGroups navigationModeGroups(uint8_t component_id);
+    NavigationModeGroups navigationModeGroups(uint8_t component_id) const;
 
 private:
     bool loadDefinitions(const nlohmann::json& j);
