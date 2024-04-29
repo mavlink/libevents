@@ -3,14 +3,17 @@ include(GNUInstallDirs)
 add_library(libevents_parser
 	parser.cpp
 )
-target_compile_options(libevents_parser
-	PRIVATE
-	-Wall
-	-Wextra
-	-Werror
-	-Wconversion
-	-Wpedantic
-)
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+	target_compile_options(libevents_parser
+		PRIVATE
+		-Wall
+		-Wextra
+		-Werror
+		-Wconversion
+		-Wpedantic
+	)
+endif()
 set_target_properties(libevents_parser PROPERTIES PUBLIC_HEADER parser.h)
 install(TARGETS libevents_parser
 		EXPORT libevents
@@ -31,14 +34,16 @@ install(TARGETS nlohmann_json
 add_library(libevents_health_and_arming_checks
 	health_and_arming_checks.cpp
 )
-target_compile_options(libevents_health_and_arming_checks
-	PRIVATE
-	-Wall
-	-Wextra
-	-Werror
-	-Wconversion
-	-Wpedantic
-)
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+	target_compile_options(libevents_health_and_arming_checks
+		PRIVATE
+		-Wall
+		-Wextra
+		-Werror
+		-Wconversion
+		-Wpedantic
+	)
+endif()
 set_target_properties(libevents_health_and_arming_checks PROPERTIES PUBLIC_HEADER health_and_arming_checks.h)
 install(TARGETS libevents_health_and_arming_checks
 		EXPORT libevents

@@ -33,14 +33,16 @@ add_custom_target(libevents_test_header DEPENDS ${generated_events_header})
 add_executable(parser_test
 	parser.cpp
 )
-target_compile_options(parser_test
-	PRIVATE
-	-Wall
-	-Wextra
-	-Werror
-	-Wconversion
-	-Wpedantic
-)
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+	target_compile_options(parser_test
+		PRIVATE
+		-Wall
+		-Wextra
+		-Werror
+		-Wconversion
+		-Wpedantic
+	)
+endif()
 target_link_libraries(parser_test PRIVATE
 	libevents_parser
 	GTest::gtest_main
