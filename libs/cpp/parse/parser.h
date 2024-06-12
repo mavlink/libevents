@@ -113,7 +113,10 @@ public:
     const std::string& type() const { return _event_definition.type; }
 
     int numArguments() const { return static_cast<int>(_event_definition.arguments.size()); }
-    const EventArgumentDefinition& argument(std::size_t index) const { return _event_definition.arguments[index]; }
+    const EventArgumentDefinition& argument(std::vector<EventArgumentDefinition>::size_type index) const
+    {
+        return _event_definition.arguments[index];
+    }
     Argument argumentValue(int index) const;
     uint64_t argumentValueInt(int index) const;
 
