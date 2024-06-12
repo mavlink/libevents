@@ -5,6 +5,10 @@ if (POLICY CMP0048)
 endif (POLICY CMP0048)
 project(libevents C CXX)
 
+if (NOT CMAKE_CXX_STANDARD)
+	set(CMAKE_CXX_STANDARD 14)
+endif()
+
 include(GNUInstallDirs)
 
 set(LIBEVENTS_CPP_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
