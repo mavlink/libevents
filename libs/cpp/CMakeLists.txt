@@ -41,6 +41,9 @@ add_subdirectory(protocol)
 
 add_library(libevents STATIC empty.cpp)
 target_link_libraries(libevents PUBLIC libevents_parser libevents_health_and_arming_checks libevents_receive)
+target_include_directories(libevents PUBLIC
+		$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 install(TARGETS libevents
 		EXPORT libevents
 		LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
