@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "../common/event_type.h"
-#include "nlohmann_json/single_include/nlohmann/json_fwd.hpp"
+#include "nlohmann/json_fwd.hpp"
 
 namespace events
 {

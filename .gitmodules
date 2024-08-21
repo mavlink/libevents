@@ -1,3 +1,0 @@
-[submodule "libs/cpp/parse/nlohmann_json"]
-	path = libs/cpp/parse/nlohmann_json
-	url = https://github.com/nlohmann/json.git
