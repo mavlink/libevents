@@ -22,14 +22,14 @@ install(TARGETS libevents_parser
 
 add_library(nlohmann_json
 		INTERFACE
-		nlohmann_json/single_include/nlohmann/json_fwd.hpp
+		nlohmann/json_fwd.hpp
 )
 set_target_properties(nlohmann_json PROPERTIES PUBLIC_HEADER
-		nlohmann_json/single_include/nlohmann/json_fwd.hpp)
+		nlohmann/json_fwd.hpp)
 install(TARGETS nlohmann_json
 		EXPORT libevents
 		LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-		PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libevents/parse/nlohmann_json/single_include/nlohmann)
+		PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libevents/parse/nlohmann)
 
 add_library(libevents_health_and_arming_checks
 	health_and_arming_checks.cpp
