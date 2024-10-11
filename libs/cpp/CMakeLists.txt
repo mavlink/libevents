@@ -39,9 +39,9 @@ add_subdirectory(common)
 add_subdirectory(parse)
 add_subdirectory(protocol)
 
-add_library(libevents STATIC empty.cpp)
-target_link_libraries(libevents PUBLIC libevents_parser libevents_health_and_arming_checks libevents_receive)
-target_include_directories(libevents PUBLIC
+add_library(libevents INTERFACE)
+target_link_libraries(libevents INTERFACE libevents_parser libevents_health_and_arming_checks libevents_receive)
+target_include_directories(libevents INTERFACE
 		$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 install(TARGETS libevents
