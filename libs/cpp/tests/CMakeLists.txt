@@ -15,9 +15,10 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
+find_package(Python3 COMPONENTS Interpreter)
 set(generated_events_header ${CMAKE_CURRENT_BINARY_DIR}/events_generated.h)
 add_custom_command(OUTPUT ${generated_events_header}
-	COMMAND ${PYTHON_EXECUTABLE} ${LIBEVENTS_ROOT_DIR}/scripts/generate.py
+	COMMAND ${Python3_EXECUTABLE} ${LIBEVENTS_ROOT_DIR}/scripts/generate.py
 		--language cpp
 		--output ${CMAKE_CURRENT_BINARY_DIR}
 		${LIBEVENTS_ROOT_DIR}/libs/test.json
