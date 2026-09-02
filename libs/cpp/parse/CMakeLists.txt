@@ -26,6 +26,10 @@ install(FILES nlohmann/json_fwd.hpp
 add_library(libevents_health_and_arming_checks
 	health_and_arming_checks.cpp
 )
+target_link_libraries(libevents_health_and_arming_checks
+	PRIVATE
+	libevents_parser
+)
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	target_compile_options(libevents_health_and_arming_checks
 		PRIVATE
