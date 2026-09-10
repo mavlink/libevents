@@ -143,7 +143,7 @@ void HealthAndArmingChecks::updateResultsFromChunks()
             _results._health_components.health_components = chunk._health_components.health_components;
         } else {
             auto& health_components = _results._health_components.health_components;
-            for (auto health_component_iter : chunk._health_components.health_components) {
+            for (const auto& health_component_iter : chunk._health_components.health_components) {
                 if (health_components.find(health_component_iter.first) == health_components.end()) {
                     health_components.insert(std::make_pair(health_component_iter.first, health_component_iter.second));
                 } else {
@@ -162,16 +162,65 @@ void HealthAndArmingChecks::updateResultsFromChunks()
         // checks
         for (const auto& check : chunk._checks) {
             _results._checks.push_back(check);
-            if (check.affected_health_component_index != 0) {  // 0 == none
-                for (auto health_component_iter : chunk._health_components.health_components) {
-                    if (health_component_iter.second.bitmask == (1ull << check.affected_health_component_index)) {
-                        _results._checks.back().health_component = &health_component_iter.second;
-                        break;
-                    }
-                }
+        }
+    }
+
+    // Link only now that the merged health component map is complete
+    _results.linkChecksToHealthComponents();
+}
+
+void HealthAndArmingChecks::Results::linkChecksToHealthComponents()
+{
+    for (auto& check : _checks) {
+        check.health_component = nullptr;
+        // 0 == none; larger indexes cannot be represented in the bitmask
+        if (check.affected_health_component_index == 0 || check.affected_health_component_index >= 64) {
+            continue;
+        }
+        const uint64_t bitmask = 1ull << check.affected_health_component_index;
+        for (auto& health_component_iter : _health_components.health_components) {
+            if (health_component_iter.second.bitmask == bitmask) {
+                check.health_component = &health_component_iter.second;
+                break;
             }
         }
     }
+}
+
+HealthAndArmingChecks::Results::Results(const Results& other)
+    : _mode_groups(other._mode_groups), _health_components(other._health_components), _checks(other._checks)
+{
+    linkChecksToHealthComponents();
+}
+
+HealthAndArmingChecks::Results::Results(Results&& other) noexcept
+    : _mode_groups(std::move(other._mode_groups)),
+      _health_components(std::move(other._health_components)),
+      _checks(std::move(other._checks))
+{
+    linkChecksToHealthComponents();
+}
+
+HealthAndArmingChecks::Results& HealthAndArmingChecks::Results::operator=(const Results& other)
+{
+    if (this != &other) {
+        _mode_groups = other._mode_groups;
+        _health_components = other._health_components;
+        _checks = other._checks;
+        linkChecksToHealthComponents();
+    }
+    return *this;
+}
+
+HealthAndArmingChecks::Results& HealthAndArmingChecks::Results::operator=(Results&& other) noexcept
+{
+    if (this != &other) {
+        _mode_groups = std::move(other._mode_groups);
+        _health_components = std::move(other._health_components);
+        _checks = std::move(other._checks);
+        linkChecksToHealthComponents();
+    }
+    return *this;
 }
 
 void HealthAndArmingChecks::reset()

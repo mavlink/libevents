@@ -58,6 +58,12 @@ public:
     class Results
     {
     public:
+        Results() = default;
+        Results(const Results& other);
+        Results(Results&& other) noexcept;
+        Results& operator=(const Results& other);
+        Results& operator=(Results&& other) noexcept;
+
         bool canArm(int mode_group_index) const;
         bool canRun(int mode_group_index) const;
 
@@ -67,6 +73,12 @@ public:
         const HealthComponents& healthComponents() const { return _health_components; }
 
     private:
+        /**
+         * Point each Check::health_component at the matching entry of this object's
+         * own health component map (or nullptr if there is none).
+         */
+        void linkChecksToHealthComponents();
+
         ModeGroups _mode_groups;
         HealthComponents _health_components;
         std::vector<Check> _checks;

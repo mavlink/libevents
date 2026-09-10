@@ -53,6 +53,7 @@ cmake .. -G "Unix Makefiles"
 make
 echo "Running Tests"
 ./tests/parser_test
+./tests/health_and_arming_checks_test
 echo "Checking source format"
 make format || (echo -e "\nFormat check failed, run:\n(mkdir -p libs/cpp/build && cd libs/cpp/build && cmake .. && make format)\n" && exit 1)
 popd

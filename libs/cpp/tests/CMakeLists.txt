@@ -51,5 +51,27 @@ target_link_libraries(parser_test PRIVATE
 target_include_directories(parser_test PRIVATE ${LIBEVENTS_CPP_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 add_dependencies(parser_test libevents_test_header)
 
+add_executable(health_and_arming_checks_test
+	health_and_arming_checks.cpp
+)
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+	target_compile_options(health_and_arming_checks_test
+		PRIVATE
+		-Wall
+		-Wextra
+		-Werror
+		-Wconversion
+		-Wpedantic
+	)
+endif()
+target_link_libraries(health_and_arming_checks_test PRIVATE
+	libevents_health_and_arming_checks
+	libevents_parser
+	GTest::gtest_main
+)
+target_include_directories(health_and_arming_checks_test PRIVATE ${LIBEVENTS_CPP_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+add_dependencies(health_and_arming_checks_test libevents_test_header)
+
 include(GoogleTest)
 gtest_discover_tests(parser_test)
+gtest_discover_tests(health_and_arming_checks_test)
