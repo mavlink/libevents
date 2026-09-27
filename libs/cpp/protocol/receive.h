@@ -26,8 +26,8 @@ public:
         std::function<void(int num_events_lost)> error;  ///< lost events
         /**
          * Send a REQUEST_EVENT message. A target system id above 255 does not fit the 8 bit target_system field of the
-         * struct, which then only holds MAVLINK_TARGET_SYSTEM_SENTINEL, so the target is passed alongside it. Pass it on
-         * to mavlink_msg_request_event_pack_chan(), which puts a wide target into the extended header, rather than
+         * struct, which then only holds MAVLINK_TARGET_SYSTEM_SENTINEL, so the target is passed alongside it. Pass it
+         * on to mavlink_msg_request_event_pack_chan(), which puts a wide target into the extended header, rather than
          * encoding the struct as is.
          */
         std::function<void(const mavlink_request_event_t&, uint32_t target_system_id)> send_request_event_message;
