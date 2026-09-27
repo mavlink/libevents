@@ -24,13 +24,19 @@ class ReceiveProtocol
 public:
     struct Callbacks {
         std::function<void(int num_events_lost)> error;  ///< lost events
-        std::function<void(const mavlink_request_event_t&)> send_request_event_message;
+        /**
+         * Send a REQUEST_EVENT message. A target system id above 255 does not fit the 8 bit target_system field of the
+         * struct, which then only holds MAVLINK_TARGET_SYSTEM_SENTINEL, so the target is passed alongside it. Pass it
+         * on to mavlink_msg_request_event_pack_chan(), which puts a wide target into the extended header, rather than
+         * encoding the struct as is.
+         */
+        std::function<void(const mavlink_request_event_t&, uint32_t target_system_id)> send_request_event_message;
         std::function<void(const mavlink_event_t&)> handle_event;
         std::function<void(int timeout_ms)> timer_control;  ///< control timer (single shot), timeout_ms <0 means to
                                                             ///< disable the timer
     };
 
-    ReceiveProtocol(const Callbacks& callbacks, uint8_t our_system_id, uint8_t our_component_id, uint8_t system_id,
+    ReceiveProtocol(const Callbacks& callbacks, uint32_t our_system_id, uint8_t our_component_id, uint32_t system_id,
                     uint8_t component_id)
         : _callbacks(callbacks),
           _our_system_id(our_system_id),
@@ -106,8 +112,12 @@ private:
         }
 
         // ignore events that are not for us
+        // Note that destination_system is 8 bit and, unlike a target_system field, is not a routing target, so it
+        // never moves into the extended header of a 32 bit system id setup. A system id above 255 therefore cannot be
+        // addressed by an event at all and only broadcast events (destination_system 0) reach us. Supporting that
+        // needs a wider field in the EVENT message itself.
         if (event_msg.destination_system != _our_system_id && event_msg.destination_system != 0) {
-            LIBEVENTS_DEBUG_PRINTF("Ignoring event not for us (sys id: %i != %i)\n", event_msg.destination_system,
+            LIBEVENTS_DEBUG_PRINTF("Ignoring event not for us (sys id: %i != %u)\n", event_msg.destination_system,
                                    _our_system_id);
             return;
         }
@@ -142,13 +152,15 @@ private:
     void requestEvent(uint16_t sequence)
     {
         mavlink_request_event_t msg{};
-        msg.target_system = _system_id;
+        // A target above 255 does not fit the payload field and belongs into the extended header, which the caller
+        // packs. The payload then gets the same sentinel as on the wire.
+        msg.target_system = mavlink_msg_target_field(_system_id);
         msg.target_component = _component_id;
         msg.first_sequence = msg.last_sequence = sequence;
 
         LIBEVENTS_DEBUG_PRINTF("requesting seq %i\n", sequence);
 
-        _callbacks.send_request_event_message(msg);
+        _callbacks.send_request_event_message(msg, _system_id);
         // start a timer (or reset existing timer)
         if (_callbacks.timer_control) {
             _callbacks.timer_control(100);
@@ -181,7 +193,13 @@ private:
         mavlink_response_event_error_t event_error;
         mavlink_msg_response_event_error_decode(&message, &event_error);
 
-        if (event_error.target_system != _our_system_id || event_error.target_component != _our_component_id) {
+        // The decoded struct only holds a sentinel when the target did not fit the 8 bit field and travelled in the
+        // extended header instead. The helper takes that into account, so use it rather than
+        // event_error.target_system.
+        uint32_t target_system = 0;
+        mavlink_msg_get_target_system(&message, &event_error.target_system, &target_system);
+
+        if (target_system != _our_system_id || event_error.target_component != _our_component_id) {
             return;
         }
 
@@ -222,10 +240,10 @@ private:
     bool _has_current_sequence{false};
     uint32_t _latest_current_sequence;  ///< latest received sequence number via mavlink_current_event_sequence_t
 
-    uint8_t _our_system_id;
+    uint32_t _our_system_id;
     uint8_t _our_component_id;
 
-    uint8_t _system_id;
+    uint32_t _system_id;
     uint8_t _component_id;
 };
 
