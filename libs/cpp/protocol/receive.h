@@ -26,8 +26,8 @@ public:
         std::function<void(int num_events_lost)> error;  ///< lost events
         /**
          * Send a REQUEST_EVENT message. A target system id above 255 does not fit the 8 bit target_system field of the
-         * struct, which then reads as 0, so the target is passed alongside it. Pass it on to
-         * mavlink_msg_request_event_pack_chan(), which puts a wide target into the extended header, rather than
+         * struct, which then only holds MAVLINK_TARGET_SYSTEM_SENTINEL, so the target is passed alongside it. Pass it on
+         * to mavlink_msg_request_event_pack_chan(), which puts a wide target into the extended header, rather than
          * encoding the struct as is.
          */
         std::function<void(const mavlink_request_event_t&, uint32_t target_system_id)> send_request_event_message;
@@ -153,8 +153,8 @@ private:
     {
         mavlink_request_event_t msg{};
         // A target above 255 does not fit the payload field and belongs into the extended header, which the caller
-        // packs. Leaving 0 here matches what the wire does for such an extended target.
-        msg.target_system = _system_id > 255 ? 0 : static_cast<uint8_t>(_system_id);
+        // packs. The payload then gets the same sentinel as on the wire.
+        msg.target_system = mavlink_msg_target_field(_system_id);
         msg.target_component = _component_id;
         msg.first_sequence = msg.last_sequence = sequence;
 
@@ -193,10 +193,11 @@ private:
         mavlink_response_event_error_t event_error;
         mavlink_msg_response_event_error_decode(&message, &event_error);
 
-        // The decoded struct holds the raw 8 bit payload field, which reads as 0 when the target did not fit and
-        // travelled in the extended header instead. The getter takes that into account, so use it rather than
+        // The decoded struct only holds a sentinel when the target did not fit the 8 bit field and travelled in the
+        // extended header instead. The helper takes that into account, so use it rather than
         // event_error.target_system.
-        const uint32_t target_system = mavlink_msg_response_event_error_get_target_system(&message);
+        uint32_t target_system = 0;
+        mavlink_msg_get_target_system(&message, &event_error.target_system, &target_system);
 
         if (target_system != _our_system_id || event_error.target_component != _our_component_id) {
             return;
