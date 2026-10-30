@@ -48,6 +48,8 @@ install(TARGETS libevents
 		EXPORT libevents
 		LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 		PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libevents)
+install(FILES generated/events_generated.h
+		DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libevents/generated)
 install(EXPORT libevents
 		FILE libevents.cmake
 		DESTINATION lib/cmake/libevents
